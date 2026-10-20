@@ -1,0 +1,6 @@
+quiz
+quiz.exe
+tests_bin
+tests_bin.exe
+*.o
+.DS_Store
