@@ -4,9 +4,14 @@
 
 int main() {
     QuizLogic logic;
-    Question q{"Q", {"a", "b", "c", "d"}, 'B'};
-    assert(logic.checkAnswer(q, 'B'));
+
+    Question q{"What is 2 + 2?", {"1", "2", "4", "5"}, 'C'};
+
+    assert(logic.checkAnswer(q, 'C'));
     assert(!logic.checkAnswer(q, 'A'));
-    std::cout << "All tests passed\n";
+    assert(logic.checkAnswer(q, 'c'));
+
+    std::cout << "F-006 tests passed!" << std::endl;
+
     return 0;
 }
