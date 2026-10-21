@@ -19,13 +19,18 @@ int main() {
     logic.updateScore(q1, 'C');
     assert(logic.getScore() == 1);
 
+    // F-008: Incorrect answers must not increase the score
     logic.updateScore(q2, 'A');
     assert(logic.getScore() == 1);
 
+    logic.updateScore(q2, 'C');
+    assert(logic.getScore() == 1);
+
+    // Another correct answer increases the score
     logic.updateScore(q2, 'B');
     assert(logic.getScore() == 2);
 
-    std::cout << "F-006 and F-007 tests passed!" << std::endl;
+    std::cout << "F-006, F-007, and F-008 tests passed!" << std::endl;
 
     return 0;
 }
