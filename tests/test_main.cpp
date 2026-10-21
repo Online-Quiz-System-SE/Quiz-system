@@ -5,13 +5,27 @@
 int main() {
     QuizLogic logic;
 
-    Question q{"What is 2 + 2?", {"1", "2", "4", "5"}, 'C'};
+    Question q1{"What is 2 + 2?", {"1", "2", "4", "5"}, 'C'};
+    Question q2{"What is 3 + 3?", {"5", "6", "7", "8"}, 'B'};
 
-    assert(logic.checkAnswer(q, 'C'));
-    assert(!logic.checkAnswer(q, 'A'));
-    assert(logic.checkAnswer(q, 'c'));
+    // F-006: Answer checking
+    assert(logic.checkAnswer(q1, 'C'));
+    assert(!logic.checkAnswer(q1, 'A'));
+    assert(logic.checkAnswer(q1, 'c'));
 
-    std::cout << "F-006 tests passed!" << std::endl;
+    // F-007: Score incrementing
+    assert(logic.getScore() == 0);
+
+    logic.updateScore(q1, 'C');
+    assert(logic.getScore() == 1);
+
+    logic.updateScore(q2, 'A');
+    assert(logic.getScore() == 1);
+
+    logic.updateScore(q2, 'B');
+    assert(logic.getScore() == 2);
+
+    std::cout << "F-006 and F-007 tests passed!" << std::endl;
 
     return 0;
 }
