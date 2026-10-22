@@ -21,7 +21,7 @@ std::vector<Question> loadQuestions(const std::string& filename) {
             fields.push_back(field);
         }
 
-        if (fields.size() != 6) {
+        if (fields.size() != 6 || fields[5].empty()) {
             continue;
         }
 
@@ -38,60 +38,93 @@ std::vector<Question> loadQuestions(const std::string& filename) {
 
 int main() {
     const std::string filename = "data/questions.txt";
-    std::vector<Question> questions = loadQuestions(filename);
+    const std::vector<Question> questions = loadQuestions(filename);
 
     if (questions.empty()) {
         std::cerr << "Error: No valid questions could be loaded.\n";
         return 1;
     }
 
-    QuizLogic logic;
+    char restart = 'N';
 
-    std::cout << "Welcome to the Online Quiz System!\n\n";
+    do {
+        // A new QuizLogic object resets the score.
+        QuizLogic logic;
 
-    for (std::size_t i = 0; i < questions.size(); ++i) {
-        const Question& q = questions[i];
+        std::cout << "\nWelcome to the Online Quiz System!\n\n";
 
-        std::cout << "Question " << i + 1 << ": " << q.text << '\n';
+        for (std::size_t i = 0; i < questions.size(); ++i) {
+            const Question& q = questions[i];
 
-        for (std::size_t j = 0; j < q.options.size(); ++j) {
-            std::cout << static_cast<char>('A' + j)
-                      << ". " << q.options[j] << '\n';
+            std::cout << "Question " << i + 1 << ": "
+                      << q.text << '\n';
+
+            for (std::size_t j = 0; j < q.options.size(); ++j) {
+                std::cout << static_cast<char>('A' + j)
+                          << ". " << q.options[j] << '\n';
+            }
+
+            char choice;
+
+            while (true) {
+                std::cout << "Your answer (A-D): ";
+
+                if (!(std::cin >> choice)) {
+                    std::cerr << "\nError reading input.\n";
+                    return 1;
+                }
+
+                choice = static_cast<char>(
+                    std::toupper(static_cast<unsigned char>(choice))
+                );
+
+                if (choice >= 'A' && choice <= 'D') {
+                    break;
+                }
+
+                std::cout
+                    << "Invalid option. Please enter A, B, C, or D.\n";
+            }
+
+            logic.updateScore(q, choice);
+            std::cout << '\n';
         }
 
-        char choice;
+        // F-010: Calculate the final score.
+        const int finalScore = logic.getScore();
+        const int totalQuestions = static_cast<int>(questions.size());
 
-        while (true) {
-            std::cout << "Your answer (A-D): ";
+        // F-011: Display the final score.
+        std::cout << "Quiz completed!\n";
+        std::cout << "Your score: " << finalScore
+                  << " / " << totalQuestions << '\n';
 
-            if (!(std::cin >> choice)) {
-                std::cerr << "\nError reading input.\n";
+        // F-016: Restart option.
+        std::cout << "\nWould you like to restart the quiz? (Y/N): ";
+
+        if (!(std::cin >> restart)) {
+            return 1;
+        }
+
+        restart = static_cast<char>(
+            std::toupper(static_cast<unsigned char>(restart))
+        );
+
+        while (restart != 'Y' && restart != 'N') {
+            std::cout << "Please enter Y or N: ";
+
+            if (!(std::cin >> restart)) {
                 return 1;
             }
 
-            choice = static_cast<char>(
-                std::toupper(static_cast<unsigned char>(choice))
+            restart = static_cast<char>(
+                std::toupper(static_cast<unsigned char>(restart))
             );
-
-            if (choice >= 'A' && choice <= 'D') {
-                break;
-            }
-
-            std::cout << "Invalid option. Please enter A, B, C, or D.\n";
         }
 
-        logic.updateScore(q, choice);
-        std::cout << '\n';
-    }
+    } while (restart == 'Y');
 
-    // F-010: Calculate the final score.
-    const int finalScore = logic.getScore();
-    const int totalQuestions = static_cast<int>(questions.size());
-
-    // F-011: Display the final score.
-    std::cout << "Quiz completed!\n";
-    std::cout << "Your score: " << finalScore
-              << " / " << totalQuestions << '\n';
+    std::cout << "\nThanks for playing!\n";
 
     return 0;
 }
