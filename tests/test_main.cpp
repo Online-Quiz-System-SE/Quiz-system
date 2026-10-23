@@ -102,6 +102,15 @@ void test_menu_routing() {
     assert(has(out, "Invalid menu choice."));
 }
 
+// TC-09: quiz moves to the next question only after a valid answer
+void test_moves_to_next_question() {
+    std::string invalidOnly = runSession("2\nx\n");
+    assert(!has(invalidOnly, "Question 2 of 2"));
+
+    std::string afterValid = runSession("2\nB\n");
+    assert(has(afterValid, "Question 2 of 2: Q2?"));
+}
+
 int main() {
     test_check_answer();
     test_answer_and_score();
@@ -111,6 +120,7 @@ int main() {
     test_invalid_answer_reprompts();
     test_final_score();
     test_menu_routing();
+    test_moves_to_next_question();
     std::cout << "All tests passed\n";
     return 0;
 }
