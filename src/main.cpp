@@ -201,3 +201,50 @@ void deleteQuestion() {
     std::cout << "Delete question " << number << "? (y/n): ";
     std::string confirm;
     if (!std::getline(std::cin, confirm)) return;
+
+    if (confirm != "y" && confirm != "Y") {
+        std::cout << "Deletion cancelled.\n";
+        return;
+    }
+
+    questions.erase(questions.begin() + number - 1);
+
+    if (saveAllQuestions(questions)) {
+        std::cout << "Question deleted successfully.\n";
+    }
+}
+
+void adminMenu() {
+    while (true) {
+        std::cout << "\n--- Admin Menu ---\n"
+                  << "1. Add question\n"
+                  << "2. Modify question\n"
+                  << "3. Delete question\n"
+                  << "4. Logout\n"
+                  << "Enter choice: ";
+
+        std::string input;
+        if (!std::getline(std::cin, input)) return;
+
+        if (input == "4") {
+            std::cout << "Admin logged out.\n";
+            return;
+        } else if (input == "1") {
+            addQuestion();
+        } else if (input == "2") {
+            modifyQuestion();
+        } else if (input == "3") {
+            deleteQuestion();
+        } else {
+            std::cout << "Invalid menu option.\n";
+        }
+    }
+}
+
+int main() {
+    QuizController controller(
+        [] { return loadQuestions(); },
+        [] { if (adminLogin()) adminMenu(); });
+    controller.run();
+    return 0;
+}
