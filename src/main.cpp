@@ -113,11 +113,81 @@ void modifyExistingQuestion() {
         std::cout << "Failed to update the question.\n";
     }
 }
+void deleteExistingQuestion() {
+    std::vector<Question> questions = loadQuestions(QUESTION_FILE);
 
+    if (questions.empty()) {
+        std::cout << "No questions are available to delete.\n";
+        return;
+    }
+
+    std::cout << "\n--- Delete a Question ---\n";
+
+    for (std::size_t i = 0; i < questions.size(); ++i) {
+        std::cout << i + 1 << ". " << questions[i].text << '\n';
+    }
+
+    std::cout << "Enter the question number to delete: ";
+
+    std::size_t selection;
+
+    if (!(std::cin >> selection)) {
+        std::cout << "Invalid selection.\n";
+        std::cin.clear();
+        std::cin.ignore(
+            std::numeric_limits<std::streamsize>::max(), '\n');
+        return;
+    }
+
+    std::cin.ignore(
+        std::numeric_limits<std::streamsize>::max(), '\n');
+
+    if (selection < 1 || selection > questions.size()) {
+        std::cout << "Question number out of range.\n";
+        return;
+    }
+
+    std::cout << "\nSelected question: "
+              << questions[selection - 1].text << '\n';
+
+    std::cout << "Are you sure you want to delete this question? (Y/N): ";
+
+    std::string confirmation;
+    std::getline(std::cin, confirmation);
+
+    if (confirmation.size() != 1) {
+        std::cout << "Invalid confirmation. No changes were made.\n";
+        return;
+    }
+
+    char choice = static_cast<char>(
+        std::toupper(static_cast<unsigned char>(confirmation[0])));
+
+    if (choice == 'N') {
+        std::cout << "Deletion cancelled. No changes were made.\n";
+        return;
+    }
+
+    if (choice != 'Y') {
+        std::cout << "Invalid confirmation. Enter Y or N.\n";
+        return;
+    }
+
+    if (deleteQuestion(QUESTION_FILE, selection - 1)) {
+        std::cout << "Question deleted successfully!\n";
+    } else {
+        std::cout << "Failed to delete the question.\n";
+    }
+}
 int main() {
     QuizController controller(
         [] { return loadQuestions(QUESTION_FILE); },
         [] { modifyExistingQuestion(); });
+
+    controller.setDeleteAction([] {
+        deleteExistingQuestion();
+    });
+
     controller.run();
     return 0;
 }

@@ -14,6 +14,7 @@ public:
 
     void run();         // main menu loop
     void startQuiz();   // OQ-F-001: start a new quiz with score 0
+    void setDeleteAction(AdminAction action);
     int score() const { return score_; }
 
 private:
@@ -22,6 +23,7 @@ private:
     char readChoice();                       // OQ-F-004, F-005; '\0' if input ends
 
     QuestionLoader loader_;
+    AdminAction deleteAdmin_;
     AdminAction admin_;
     std::istream& in_;
     std::ostream& out_;

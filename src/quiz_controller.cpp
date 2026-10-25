@@ -11,19 +11,36 @@ void QuizController::showMenu() const {
     out_ << "\n=== Online Quiz System ===\n"
          << "1. Admin: Modify a question\n"
          << "2. Take Quiz\n"
+         << "3. Admin: Delete a question\n"
          << "0. Exit\n"
          << "Choose an option: ";
 }
 
 void QuizController::run() {
     std::string line;
+
     while (true) {
         showMenu();
-        if (!std::getline(in_, line)) return;
-        if (line == "0")      return;
-        else if (line == "1") { if (admin_) admin_(); }
-        else if (line == "2") startQuiz();
-        else                  out_ << "Invalid menu choice.\n";
+
+        if (!std::getline(in_, line)) {
+            return;
+        }
+
+        if (line == "0") {
+            return;
+        } else if (line == "1") {
+            if (admin_) {
+                admin_();
+            }
+        } else if (line == "2") {
+            startQuiz();
+        } else if (line == "3") {
+            if (deleteAdmin_) {
+                deleteAdmin_();
+            }
+        } else {
+            out_ << "Invalid menu choice.\n";
+        }
     }
 }
 
@@ -71,4 +88,7 @@ char QuizController::readChoice() {
         }
         out_ << "Invalid option. Enter A, B, C, or D.\n";
     }
+}
+void QuizController::setDeleteAction(AdminAction action) {
+    deleteAdmin_ = std::move(action);
 }
