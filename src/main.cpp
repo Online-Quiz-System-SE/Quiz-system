@@ -211,6 +211,7 @@ void modifyQuestionInBank() {
     if (number < 1) {
         return;
     }
+}
 
     Question updatedQuestion;
 
@@ -260,6 +261,7 @@ void deleteQuestionFromBank() {
         std::cout << "Deletion cancelled.\n";
         return;
     }
+}
 
     questions.erase(questions.begin() + (number - 1));
 

@@ -9,7 +9,7 @@ QuizController::QuizController(QuestionLoader loader, AdminAction admin,
 
 void QuizController::showMenu() const {
     out_ << "\n=== Online Quiz System ===\n"
-         << "1. Admin: Modify a question\n"
+         << "1. Admin login\n"
          << "2. Take Quiz\n"
          << "0. Exit\n"
          << "Choose an option: ";
