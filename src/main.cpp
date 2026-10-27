@@ -1,66 +1,30 @@
 
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <string>
 #include <vector>
-#include <limits>
 
+#include "question_loader.h"
 #include "quiz_logic.h"
 #include "quiz_controller.h"
 #include "admin_validation.h"
+
 const std::string QUESTION_FILE = "data/questions.txt";
 
-std::vector<Question> loadQuestions(const std::string& filename) {
-    std::vector<Question> questions;
-    std::ifstream file(filename);
+int main() {
+    // Load questions from the question bank.
+    auto loader = []() -> std::vector<Question> {
+        return loadQuestions(QUESTION_FILE);
+    };
 
-    if (!file.is_open()) {
-        std::cerr << "Error: Unable to open question file: "
-                  << filename << '\n';
-        return questions;
-    }
+    // Admin action placeholder.
+    // Replace this with your existing admin menu function if available.
+    auto adminAction = []() {
+        std::cout << "Admin functionality is not configured yet.\n";
+    };
 
-    std::string line;
-    std::size_t lineNumber = 0;
+    // Create the quiz controller and start the menu.
+    QuizController controller(loader, adminAction);
+    controller.run();
 
-    while (std::getline(file, line)) {
-        ++lineNumber;
-
-        // Ignore empty lines.
-        if (line.empty()) {
-            continue;
-        }
-
-        std::stringstream ss(line);
-        std::vector<std::string> fields;
-        std::string field;
-
-        while (std::getline(ss, field, '|')) {
-            fields.push_back(field);
-        }
-
-        // Each record must contain a question, four options,
-        // and one correct answer.
-        if (fields.size() != 6) {
-            std::cerr << "Warning: Skipping malformed record at line "
-                      << lineNumber
-                      << ". Expected six fields.\n";
-            continue;
-        }
-
-        // The answer must contain exactly one character.
-        if (fields[5].size() != 1) {
-            std::cerr << "Warning: Skipping malformed record at line "
-                      << lineNumber
-                      << ". Invalid answer field.\n";
-            continue;
-        }
-Question q;
-q.text = fields[0];
-q.options = {fields[1], fields[2], fields[3], fields[4]};
-q.answer = fields[5][0];
-
-if (isValidQuestion(q)) {
-    questions.push_back(q);
-}}
+    return 0;
+}
