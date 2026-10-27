@@ -1,0 +1,103 @@
+
+name: Build and Attach Release Binaries
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    name: Build and test on Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Build Linux executable
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Iinclude \
+            src/main.cpp src/quiz_controller.cpp \
+            src/quiz_logic.cpp src/admin_validation.cpp \
+            -o quiz-linux
+
+      - name: Run existing tests
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Iinclude \
+            src/quiz_controller.cpp src/quiz_logic.cpp \
+            src/admin_validation.cpp tests/test_main.cpp \
+            -o tests_bin
+          ./tests_bin
+
+      - name: Upload Linux build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          path: quiz-linux
+
+  build-windows:
+    name: Build and test on Windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install MinGW compiler
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: mingw-w64-x86_64-gcc
+
+      - name: Build Windows executable
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Iinclude \
+            src/main.cpp src/quiz_controller.cpp \
+            src/quiz_logic.cpp src/admin_validation.cpp \
+            -o quiz-windows.exe
+
+      - name: Run existing tests
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Iinclude \
+            src/quiz_controller.cpp src/quiz_logic.cpp \
+            src/admin_validation.cpp tests/test_main.cpp \
+            -o tests_bin.exe
+          ./tests_bin.exe
+
+      - name: Upload Windows build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: quiz-windows.exe
+
+  publish-release:
+    name: Attach builds to GitHub Release
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Linux build
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-build
+          path: dist
+
+      - name: Download Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-build
+          path: dist
+
+      - name: Attach both builds to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/quiz-linux
+            dist/quiz-windows.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
