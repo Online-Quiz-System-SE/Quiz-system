@@ -1,5 +1,4 @@
 Which data structure is FIFO?|Stack|Queue|Tree|Graph|B
-Which keyword declares a constant in C++?|static|volatile|const|mutable|C
 What does CPU stand for?|Central Processing Unit|Central Process Utility|Computer Personal Unit|Core Program Unit|A
 Which header provides std::vector?|<list>|<array>|<map>|<vector>|D
 What is 2 to the power 10?|512|1000|1024|2048|C
