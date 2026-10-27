@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <string>
 #include <vector>
@@ -6,6 +5,7 @@
 #include <sstream>
 #include <cctype>
 #include <limits>
+#include <sys/stat.h>
 
 #include "question_loader.h"
 #include "quiz_logic.h"
@@ -16,67 +16,19 @@ const std::string QUESTION_FILE = "data/questions.txt";
 const std::string ADMIN_USERNAME = "admin";
 const std::string ADMIN_PASSWORD = "admin123";
 
-// Convert a string to uppercase.
 std::string upperCase(std::string text) {
     for (char& ch : text) {
         ch = static_cast<char>(
             std::toupper(static_cast<unsigned char>(ch))
         );
     }
-
     return text;
 }
 
-// Load questions from the question bank.
 std::vector<Question> loadQuestionsFromFile() {
-    std::vector<Question> questions;
-    std::ifstream file(QUESTION_FILE);
-
-    if (!file.is_open()) {
-        std::cerr << "Error: Could not open "
-                  << QUESTION_FILE << '\n';
-        return questions;
-    }
-
-    std::string line;
-
-    while (std::getline(file, line)) {
-        std::stringstream ss(line);
-        std::vector<std::string> fields;
-        std::string field;
-
-        while (std::getline(ss, field, '|')) {
-            fields.push_back(field);
-        }
-
-        if (fields.size() != 6 || fields[5].size() != 1) {
-            std::cerr << "Skipping malformed question record.\n";
-            continue;
-        }
-
-        Question question;
-        question.text = fields[0];
-
-        question.options = {
-            fields[1],
-            fields[2],
-            fields[3],
-            fields[4]
-        };
-
-        question.answer = upperCase(fields[5])[0];
-
-        if (isValidQuestion(question)) {
-            questions.push_back(question);
-        } else {
-            std::cerr << "Skipping invalid question record.\n";
-        }
-    }
-
-    return questions;
+    return loadQuestions(QUESTION_FILE);
 }
 
-// Save all questions to the question bank.
 bool saveAllQuestions(const std::vector<Question>& questions) {
     std::ofstream file(QUESTION_FILE, std::ios::trunc);
 
@@ -90,9 +42,18 @@ bool saveAllQuestions(const std::vector<Question>& questions) {
             continue;
         }
 
+        if (question.text.find('|') != std::string::npos) {
+            std::cerr << "Error: Question text cannot contain '|'.\n";
+            return false;
+        }
+
         file << question.text;
 
         for (const std::string& option : question.options) {
+            if (option.find('|') != std::string::npos) {
+                std::cerr << "Error: Options cannot contain '|'.\n";
+                return false;
+            }
             file << '|' << option;
         }
 
@@ -104,19 +65,19 @@ bool saveAllQuestions(const std::vector<Question>& questions) {
     return file.good();
 }
 
-// Authenticate the administrator.
 bool adminLogin() {
     std::string username;
     std::string password;
 
     std::cout << "\n--- Admin Login ---\n";
-
     std::cout << "Username: ";
+
     if (!std::getline(std::cin, username)) {
         return false;
     }
 
     std::cout << "Password: ";
+
     if (!std::getline(std::cin, password)) {
         return false;
     }
@@ -131,11 +92,11 @@ bool adminLogin() {
     return false;
 }
 
-// Read and validate a question.
 bool readQuestion(Question& question) {
     std::string answer;
 
     std::cout << "Enter question text: ";
+
     if (!std::getline(std::cin, question.text)) {
         return false;
     }
@@ -152,6 +113,7 @@ bool readQuestion(Question& question) {
     }
 
     std::cout << "Enter correct answer (A-D): ";
+
     if (!std::getline(std::cin, answer)) {
         return false;
     }
@@ -164,20 +126,19 @@ bool readQuestion(Question& question) {
     question.answer = upperCase(answer)[0];
 
     if (!isValidQuestion(question)) {
-        std::cout << "Invalid question. Check the text, options, "
-                     "and correct answer.\n";
+        std::cout << "Invalid question. Check the question text, "
+                     "options, and answer.\n";
         return false;
     }
 
-    // The file format uses | as a field separator.
     if (question.text.find('|') != std::string::npos) {
-        std::cout << "Question text cannot contain the | character.\n";
+        std::cout << "Question text cannot contain '|'.\n";
         return false;
     }
 
     for (const std::string& option : question.options) {
         if (option.find('|') != std::string::npos) {
-            std::cout << "Options cannot contain the | character.\n";
+            std::cout << "Options cannot contain '|'.\n";
             return false;
         }
     }
@@ -185,13 +146,13 @@ bool readQuestion(Question& question) {
     return true;
 }
 
-// Add a question.
 void addQuestion() {
     Question question;
 
     if (!readQuestion(question)) {
         return;
     }
+
 
     if (saveQuestion(question, QUESTION_FILE)) {
         std::cout << "Question added successfully.\n";
@@ -200,7 +161,6 @@ void addQuestion() {
     }
 }
 
-// Read and validate a question number.
 int readQuestionNumber(std::size_t count) {
     std::string input;
 
@@ -226,15 +186,15 @@ int readQuestionNumber(std::size_t count) {
     }
 }
 
-// Display all available questions.
 void displayQuestions(const std::vector<Question>& questions) {
+    std::cout << "\n--- Question Bank ---\n";
+
     for (std::size_t i = 0; i < questions.size(); ++i) {
         std::cout << i + 1 << ". "
                   << questions[i].text << '\n';
     }
 }
 
-// Modify a question.
 void modifyQuestionInBank() {
     std::vector<Question> questions = loadQuestionsFromFile();
 
@@ -270,7 +230,6 @@ void modifyQuestionInBank() {
     }
 }
 
-// Delete a question.
 void deleteQuestionFromBank() {
     std::vector<Question> questions = loadQuestionsFromFile();
 
@@ -302,9 +261,7 @@ void deleteQuestionFromBank() {
         return;
     }
 
-    questions.erase(
-        questions.begin() + (number - 1)
-    );
+    questions.erase(questions.begin() + (number - 1));
 
     if (saveAllQuestions(questions)) {
         std::cout << "Question deleted successfully.\n";
@@ -313,14 +270,14 @@ void deleteQuestionFromBank() {
     }
 }
 
-// Administrator menu.
 void adminMenu() {
     while (true) {
         std::cout << "\n--- Admin Menu ---\n"
                   << "1. Add question\n"
                   << "2. Modify question\n"
                   << "3. Delete question\n"
-                  << "4. Logout\n"
+                  << "4. View questions\n"
+                  << "5. Logout\n"
                   << "Enter choice: ";
 
         std::string input;
@@ -336,6 +293,8 @@ void adminMenu() {
         } else if (input == "3") {
             deleteQuestionFromBank();
         } else if (input == "4") {
+            displayQuestions(loadQuestionsFromFile());
+        } else if (input == "5") {
             std::cout << "Admin logged out.\n";
             return;
         } else {
@@ -344,8 +303,9 @@ void adminMenu() {
     }
 }
 
-// Main application entry point.
 int main() {
+  
+
     auto loader = []() -> std::vector<Question> {
         return loadQuestionsFromFile();
     };
@@ -357,7 +317,6 @@ int main() {
     };
 
     QuizController controller(loader, adminAction);
-
     controller.run();
 
     return 0;
