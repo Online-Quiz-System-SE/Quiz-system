@@ -1,6 +1,8 @@
+
 #include "question_loader.h"
 #include "admin_validation.h"
 
+#include <cctype>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -23,7 +25,8 @@ std::vector<Question> loadQuestions(const std::string& filename) {
     while (std::getline(file, line)) {
         ++lineNumber;
 
-        if (line.empty()) {
+        // Skip empty lines.
+        if (line.find_first_not_of(" \t\r\n") == std::string::npos) {
             continue;
         }
 
@@ -35,31 +38,40 @@ std::vector<Question> loadQuestions(const std::string& filename) {
             fields.push_back(field);
         }
 
+        // A question must have exactly six fields.
         if (fields.size() != 6) {
             std::cerr << "Warning: Skipping malformed record at line "
-                      << lineNumber
-                      << ". Expected six fields.\n";
+                      << lineNumber << ". Expected six fields.\n";
             continue;
         }
 
+        // The answer must contain exactly one character.
         if (fields[5].size() != 1) {
             std::cerr << "Warning: Skipping malformed record at line "
-                      << lineNumber
-                      << ". Invalid answer field.\n";
+                      << lineNumber << ". Invalid answer field.\n";
             continue;
         }
 
         Question q;
         q.text = fields[0];
-        q.options = {fields[1], fields[2], fields[3], fields[4]};
-        q.answer = fields[5][0];
+        q.options = {
+            fields[1],
+            fields[2],
+            fields[3],
+            fields[4]
+        };
 
-        if (isValidQuestion(q)) {
-            questions.push_back(q);
-        } else {
+        q.answer = static_cast<char>(
+            std::toupper(static_cast<unsigned char>(fields[5][0]))
+        );
+
+        if (!isValidQuestion(q)) {
             std::cerr << "Warning: Skipping invalid question at line "
                       << lineNumber << ".\n";
+            continue;
         }
+
+        questions.push_back(q);
     }
 
     if (file.bad()) {

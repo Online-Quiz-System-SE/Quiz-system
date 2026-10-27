@@ -16,7 +16,7 @@ int main() {
         file << "\n";
         file << "Malformed record|A|B\n";
         file << "Invalid answer|A|B|C|D|AB\n";
-        file << "Empty question?|A|B|C|D|A\n";
+        file << "|A|B|C|D|A\n";
         file << "What is 3 + 3?|5|6|7|8|B\n";
     }
 
