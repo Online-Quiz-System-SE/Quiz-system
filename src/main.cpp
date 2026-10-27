@@ -4,17 +4,26 @@
 #include <vector>
 #include <string>
 #include <cctype>
-#include <limits>
+#include <stdexcept>
 
 #include "quiz_logic.h"
 #include "quiz_controller.h"
 #include "admin_validation.h"
 
 const std::string QUESTION_FILE = "data/questions.txt";
+const std::string ADMIN_USERNAME = "admin";
+const std::string ADMIN_PASSWORD = "admin123";  // TODO: store hashed, mask input (SR-005)
 
-std::vector<Question> loadQuestions(const std::string& filename) {
+std::string upperCase(std::string text) {
+    for (char& ch : text) {
+        ch = static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
+    }
+    return text;
+}
+
+std::vector<Question> loadQuestions() {
     std::vector<Question> questions;
-    std::ifstream file(filename);
+    std::ifstream file(QUESTION_FILE);
     std::string line;
 
     if (!file.is_open()) {
@@ -37,7 +46,7 @@ std::vector<Question> loadQuestions(const std::string& filename) {
         Question q;
         q.text = fields[0];
         q.options = {fields[1], fields[2], fields[3], fields[4]};
-        q.answer = fields[5][0];
+        q.answer = upperCase(fields[5])[0];
 
         if (isValidQuestion(q)) {
             questions.push_back(q);
@@ -47,77 +56,195 @@ std::vector<Question> loadQuestions(const std::string& filename) {
     return questions;
 }
 
-void modifyExistingQuestion() {
-    std::vector<Question> questions = loadQuestions(QUESTION_FILE);
+bool saveAllQuestions(const std::vector<Question>& questions) {
+    std::ofstream file(QUESTION_FILE, std::ios::trunc);
 
-    if (questions.empty()) {
-        std::cout << "No questions are available to modify.\n";
-        return;
+    if (!file.is_open()) {
+        std::cout << "Error: Could not open question file.\n";
+        return false;
     }
 
-    std::cout << "\n--- Modify a Question ---\n";
+    for (const Question& q : questions) {
+        if (!isValidQuestion(q)) {
+            continue;
+        }
+        file << q.text;
+        for (const std::string& option : q.options) {
+            file << '|' << option;
+        }
+        file << '|' << upperCase(std::string(1, q.answer)) << '\n';
+    }
+
+    return file.good();
+}
+
+bool adminLogin() {
+    std::string username;
+    std::string password;
+
+    std::cout << "Admin username: ";
+    if (!std::getline(std::cin, username)) return false;
+
+    std::cout << "Admin password: ";
+    if (!std::getline(std::cin, password)) return false;
+
+    if (username == ADMIN_USERNAME && password == ADMIN_PASSWORD) {
+        std::cout << "Admin login successful.\n";
+        return true;
+    }
+
+    std::cout << "Access denied. Admin login required.\n";
+    return false;
+}
+
+bool readQuestion(Question& q) {
+    std::string answer;
+
+    std::cout << "Enter question text: ";
+    if (!std::getline(std::cin, q.text)) return false;
+
+    q.options.resize(4);
+    for (int i = 0; i < 4; ++i) {
+        std::cout << "Enter option " << char('A' + i) << ": ";
+        if (!std::getline(std::cin, q.options[i])) return false;
+    }
+
+    std::cout << "Enter correct answer (A-D): ";
+    if (!std::getline(std::cin, answer)) return false;
+
+    if (answer.size() != 1) {
+        std::cout << "Invalid answer. Use A, B, C, or D.\n";
+        return false;
+    }
+
+    q.answer = upperCase(answer)[0];
+
+    if (!isValidQuestion(q)) {
+        std::cout << "Invalid question. Please check the text, options, and answer.\n";
+        return false;
+    }
+
+    return true;
+}
+
+void addQuestion() {
+    Question q;
+    if (!readQuestion(q)) return;
+
+    if (saveQuestion(q, QUESTION_FILE)) {
+        std::cout << "Question added successfully.\n";
+    } else {
+        std::cout << "Could not save question.\n";
+    }
+}
+
+static int readQuestionNumber(std::size_t count) {
+    std::string input;
+    if (!std::getline(std::cin, input)) return -1;
+
+    try {
+        std::size_t pos = 0;
+        int number = std::stoi(input, &pos);
+        if (pos != input.size() || number < 1 || number > static_cast<int>(count)) {
+            throw std::invalid_argument("invalid number");
+        }
+        return number;
+    } catch (...) {
+        std::cout << "Invalid question number.\n";
+        return -1;
+    }
+}
+
+void modifyQuestion() {
+    std::vector<Question> questions = loadQuestions();
+
+    if (questions.empty()) {
+        std::cout << "No questions available to modify.\n";
+        return;
+    }
 
     for (std::size_t i = 0; i < questions.size(); ++i) {
         std::cout << i + 1 << ". " << questions[i].text << '\n';
     }
 
-    std::cout << "Enter the question number to modify: ";
+    std::cout << "Enter question number to modify: ";
+    int number = readQuestionNumber(questions.size());
+    if (number < 0) return;
 
-    std::size_t selection;
+    Question updated;
+    std::cout << "Enter the updated question details:\n";
+    if (!readQuestion(updated)) return;
 
-    if (!(std::cin >> selection)) {
-        std::cout << "Invalid selection.\n";
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    questions[number - 1] = updated;
+
+    if (saveAllQuestions(questions)) {
+        std::cout << "Question modified successfully.\n";
+    }
+}
+
+void deleteQuestion() {
+    std::vector<Question> questions = loadQuestions();
+
+    if (questions.empty()) {
+        std::cout << "No questions available to delete.\n";
         return;
     }
 
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    for (std::size_t i = 0; i < questions.size(); ++i) {
+        std::cout << i + 1 << ". " << questions[i].text << '\n';
+    }
 
-    if (selection < 1 || selection > questions.size()) {
-        std::cout << "Question number out of range.\n";
+    std::cout << "Enter question number to delete: ";
+    int number = readQuestionNumber(questions.size());
+    if (number < 0) return;
+
+    std::cout << "Delete question " << number << "? (y/n): ";
+    std::string confirm;
+    if (!std::getline(std::cin, confirm)) return;
+
+    if (confirm != "y" && confirm != "Y") {
+        std::cout << "Deletion cancelled.\n";
         return;
     }
 
-    Question updatedQuestion = questions[selection - 1];
+    questions.erase(questions.begin() + number - 1);
 
-    std::cout << "Current question: " << updatedQuestion.text << '\n';
-    std::cout << "Enter updated question text: ";
-    std::getline(std::cin, updatedQuestion.text);
-
-    std::cout << "Current correct answer: "
-              << static_cast<char>(std::toupper(
-                     static_cast<unsigned char>(updatedQuestion.answer)))
-              << '\n';
-
-    std::string answer;
-    std::cout << "Enter updated correct answer (A/B/C/D): ";
-    std::getline(std::cin, answer);
-
-    if (answer.size() != 1) {
-        std::cout << "Invalid answer. Use A, B, C, or D.\n";
-        return;
+    if (saveAllQuestions(questions)) {
+        std::cout << "Question deleted successfully.\n";
     }
+}
 
-    updatedQuestion.answer = static_cast<char>(
-        std::toupper(static_cast<unsigned char>(answer[0])));
+void adminMenu() {
+    while (true) {
+        std::cout << "\n--- Admin Menu ---\n"
+                  << "1. Add question\n"
+                  << "2. Modify question\n"
+                  << "3. Delete question\n"
+                  << "4. Logout\n"
+                  << "Enter choice: ";
 
-    if (!isValidQuestion(updatedQuestion)) {
-        std::cout << "Invalid question text or answer. No changes were saved.\n";
-        return;
-    }
+        std::string input;
+        if (!std::getline(std::cin, input)) return;
 
-    if (modifyQuestion(QUESTION_FILE, selection - 1, updatedQuestion)) {
-        std::cout << "Question updated successfully!\n";
-    } else {
-        std::cout << "Failed to update the question.\n";
+        if (input == "4") {
+            std::cout << "Admin logged out.\n";
+            return;
+        } else if (input == "1") {
+            addQuestion();
+        } else if (input == "2") {
+            modifyQuestion();
+        } else if (input == "3") {
+            deleteQuestion();
+        } else {
+            std::cout << "Invalid menu option.\n";
+        }
     }
 }
 
 int main() {
     QuizController controller(
-        [] { return loadQuestions(QUESTION_FILE); },
-        [] { modifyExistingQuestion(); });
+        [] { return loadQuestions(); },
+        [] { if (adminLogin()) adminMenu(); });
     controller.run();
     return 0;
 }
