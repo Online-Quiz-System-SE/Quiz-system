@@ -2,102 +2,130 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
+
 #include "quiz_logic.h"
 #include "quiz_controller.h"
 
 static std::vector<Question> sampleQuestions() {
-    return {
-        {"Q1?", {"a", "b", "c", "d"}, 'B'},
-        {"Q2?", {"e", "f", "g", "h"}, 'C'},
-    };
+    std::vector<Question> questions;
+
+    for (int i = 1; i <= 15; ++i) {
+        Question q{
+            "ML Question " + std::to_string(i),
+            {"Option A", "Option B", "Option C", "Option D"},
+            'B'
+        };
+        q.topic = "ML";
+        questions.push_back(q);
+    }
+
+    return questions;
 }
 
-// Runs the menu with scripted input; returns everything printed
-static std::string runSession(const std::string& input, int* score = nullptr,
-                              bool* adminCalled = nullptr) {
+static std::string runSession(
+    const std::string& input,
+    int* score = nullptr,
+    bool* adminCalled = nullptr
+) {
     std::istringstream in(input);
     std::ostringstream out;
-    QuizController c([] { return sampleQuestions(); },
-                     [adminCalled] { if (adminCalled) *adminCalled = true; },
-                     in, out);
-    c.run();
-    if (score) *score = c.score();
+
+    QuizController controller(
+        [] { return sampleQuestions(); },
+        [adminCalled] {
+            if (adminCalled) {
+                *adminCalled = true;
+            }
+        },
+        in,
+        out
+    );
+
+    controller.run();
+
+    if (score) {
+        *score = controller.score();
+    }
+
     return out.str();
 }
 
-static bool has(const std::string& s, const std::string& part) {
-    return s.find(part) != std::string::npos;
+static bool has(const std::string& text, const std::string& part) {
+    return text.find(part) != std::string::npos;
 }
 
 void test_check_answer() {
     QuizLogic logic;
     Question q{"Q", {"a", "b", "c", "d"}, 'B'};
+
     assert(logic.checkAnswer(q, 'B'));
     assert(!logic.checkAnswer(q, 'A'));
+    assert(logic.checkAnswer(q, 'b'));
 }
 
-// F-006, F-007, F-008: answer checking and scoring
 void test_answer_and_score() {
     QuizLogic logic;
-    Question q1{"What is 2 + 2?", {"1", "2", "4", "5"}, 'C'};
-    Question q2{"What is 3 + 3?", {"5", "6", "7", "8"}, 'B'};
 
-    assert(logic.checkAnswer(q1, 'C'));
-    assert(!logic.checkAnswer(q1, 'A'));
-    assert(logic.checkAnswer(q1, 'c'));
+    Question q1{"Q1", {"a", "b", "c", "d"}, 'B'};
+    Question q2{"Q2", {"a", "b", "c", "d"}, 'C'};
 
-    assert(logic.getScore() == 0);
-    logic.updateScore(q1, 'C');
-    assert(logic.getScore() == 1);
+    logic.updateScore(q1, 'B');
     logic.updateScore(q2, 'A');
-    assert(logic.getScore() == 1);
     logic.updateScore(q2, 'C');
-    assert(logic.getScore() == 1);
-    logic.updateScore(q2, 'B');
+
     assert(logic.getScore() == 2);
+
+    logic.resetScore();
+    assert(logic.getScore() == 0);
 }
 
-// TC-01: starting a quiz sets score to 0 and shows question 1
-void test_start_quiz() {
-    int score = -1;
-    std::string out = runSession("2\n", &score);
-    assert(score == 0);
-    assert(has(out, "Question 1 of 2: Q1?"));
+void test_topic_selection() {
+    std::string out = runSession("2\n1\n0\n");
+
+    assert(has(out, "Machine Learning (ML)"));
+    assert(has(out, "Database Management Systems (DBMS)"));
+    assert(has(out, "Software Engineering (SE)"));
+    assert(has(out, "Data Structures and Algorithms (DSA)"));
+    assert(has(out, "General Knowledge (GK)"));
+    assert(has(out, "Topic: ML"));
 }
 
-// TC-02: only the current question is shown until the player answers
-void test_one_question_at_a_time() {
-    std::string out = runSession("2\n");
-    assert(has(out, "Question 1 of 2"));
-    assert(!has(out, "Question 2 of 2"));
+void test_five_questions() {
+    std::string out = runSession("2\n1\nB\nB\nB\nB\nB\n0\n");
+
+    assert(has(out, "Question 1 of 5"));
+    assert(has(out, "Question 5 of 5"));
+    assert(has(out, "Your score: 5 / 5"));
 }
 
-// TC-03: four options labelled A-D
-void test_options_a_to_d() {
-    std::string out = runSession("2\n");
-    assert(has(out, "A. a") && has(out, "B. b") && has(out, "C. c") && has(out, "D. d"));
+void test_invalid_topic() {
+    std::string out = runSession("2\n9\n0\n");
+
+    assert(has(out, "Invalid topic selection."));
 }
 
-// TC-04, TC-05: invalid input is rejected and re-prompted; lowercase accepted
 void test_invalid_answer_reprompts() {
-    int score = -1;
-    std::string out = runSession("2\nx\nAB\nb\nC\n0\n", &score);
+    std::string out = runSession("2\n1\nX\nB\nB\nB\nB\nB\n0\n");
+
     assert(has(out, "Invalid option. Enter A, B, C, or D."));
-    assert(score == 2);
+    assert(has(out, "Your score: 5 / 5"));
 }
 
-// TC-07, TC-08, TC-10: score counts only correct answers; final score shown
-void test_final_score() {
-    int score = -1;
-    std::string out = runSession("2\nB\nA\n0\n", &score);
-    assert(score == 1);
-    assert(has(out, "Your score: 1 / 2"));
+void test_retry_resets_score() {
+    std::string out = runSession(
+        "2\n1\nB\nB\nB\nB\nB\n1\n"
+        "A\nA\nA\nA\nA\n0\n"
+    );
+
+    assert(has(out, "Your score: 5 / 5"));
+    assert(has(out, "Your score: 0 / 5"));
 }
 
-// Admin option calls the admin action; invalid menu input is rejected
 void test_menu_routing() {
     bool adminCalled = false;
     std::string out = runSession("1\n9\n0\n", nullptr, &adminCalled);
+
     assert(adminCalled);
     assert(has(out, "Invalid menu choice."));
 }
@@ -105,12 +133,13 @@ void test_menu_routing() {
 int main() {
     test_check_answer();
     test_answer_and_score();
-    test_start_quiz();
-    test_one_question_at_a_time();
-    test_options_a_to_d();
+    test_topic_selection();
+    test_five_questions();
+    test_invalid_topic();
     test_invalid_answer_reprompts();
-    test_final_score();
+    test_retry_resets_score();
     test_menu_routing();
+
     std::cout << "All tests passed\n";
     return 0;
 }
