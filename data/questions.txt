@@ -1,5 +1,4 @@
-
-ML|Which type of learning uses labeled training data?|Supervised learning|Unsupervised learning|Reinforcement learning|Random learning|A
+﻿ML|Which type of learning uses labeled training data?|Supervised learning|Unsupervised learning|Reinforcement learning|Random learning|A
 ML|Which algorithm is commonly used for classification?|Linear regression|Logistic regression|K-means|PCA|B
 ML|What does overfitting mean?|Model performs well on unseen data|Model memorizes training data and generalizes poorly|Model has no parameters|Dataset has no labels|B
 ML|Which metric is the harmonic mean of precision and recall?|Accuracy|Specificity|F1-score|Mean squared error|C
