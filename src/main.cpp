@@ -3,7 +3,15 @@
 #include <vector>
 #include <fstream>
 #include <cctype>
+#include <cstdio>
 #include <limits>
+
+#ifdef _WIN32
+#include <conio.h>
+#else
+#include <termios.h>
+#include <unistd.h>
+#endif
 
 #include "question_loader.h"
 #include "quiz_logic.h"
@@ -18,6 +26,76 @@ const std::string ADMIN_PASSWORD = "admin123";
 const std::vector<std::string> TOPICS = {
     "ML", "DBMS", "SE", "DSA", "GK"
 };
+
+// Read the password while displaying * instead of actual characters.
+std::string readPasswordMasked() {
+    std::string password;
+    std::cout << "Enter administrator password: " << std::flush;
+
+#ifdef _WIN32
+    while (true) {
+        int input = _getch();
+
+        if (input == '\r') {
+            break;
+        }
+
+        // Ignore special keys such as arrow keys.
+        if (input == 0 || input == 224) {
+            _getch();
+            continue;
+        }
+
+        if (input == '\b') {
+            if (!password.empty()) {
+                password.pop_back();
+                std::cout << "\b \b" << std::flush;
+            }
+        } else if (input >= 32 && input <= 126) {
+            password += static_cast<char>(input);
+            std::cout << '*' << std::flush;
+        }
+    }
+#else
+    termios oldSettings{};
+
+    if (tcgetattr(STDIN_FILENO, &oldSettings) == -1) {
+        std::getline(std::cin, password);
+        return password;
+    }
+
+    termios newSettings = oldSettings;
+    newSettings.c_lflag &= static_cast<tcflag_t>(~(ECHO | ICANON));
+
+    if (tcsetattr(STDIN_FILENO, TCSANOW, &newSettings) == -1) {
+        std::getline(std::cin, password);
+        return password;
+    }
+
+    while (true) {
+        int input = getchar();
+
+        if (input == EOF || input == '\n' || input == '\r') {
+            break;
+        }
+
+        if (input == 127 || input == '\b') {
+            if (!password.empty()) {
+                password.pop_back();
+                std::cout << "\b \b" << std::flush;
+            }
+        } else if (input >= 32 && input <= 126) {
+            password += static_cast<char>(input);
+            std::cout << '*' << std::flush;
+        }
+    }
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldSettings);
+#endif
+
+    std::cout << '\n';
+    return password;
+}
 
 // Convert a string to uppercase.
 std::string upperCase(std::string text) {
@@ -125,9 +203,11 @@ bool adminLogin() {
         return false;
     }
 
-    std::cout << "Enter administrator password: ";
+    password = readPasswordMasked();
 
-    if (!std::getline(std::cin, password)) {
+    // Reject empty or whitespace-only credentials.
+    if (!areCredentialsNonEmpty(username, password)) {
+        std::cout << "Username and password cannot be empty.\n";
         return false;
     }
 

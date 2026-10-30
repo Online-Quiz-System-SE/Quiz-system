@@ -12,3 +12,6 @@ bool modifyQuestion(
     std::size_t questionIndex,
     const Question& updatedQuestion
 );
+
+bool areCredentialsNonEmpty(const std::string& username,
+                            const std::string& password);

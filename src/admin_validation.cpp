@@ -120,3 +120,13 @@ bool modifyQuestion(const std::string& filePath,
 
     return output.good();
 }
+
+// Checks that the username and password are not empty or whitespace-only.
+bool areCredentialsNonEmpty(const std::string& username,
+                            const std::string& password) {
+    auto hasNonWhitespace = [](const std::string& value) {
+        return value.find_first_not_of(" \t\r\n") != std::string::npos;
+    };
+
+    return hasNonWhitespace(username) && hasNonWhitespace(password);
+}
