@@ -1,11 +1,10 @@
-
 #include <iostream>
-#include <fstream>
-#include <sstream>
-#include <vector>
 #include <string>
+#include <vector>
+#include <fstream>
 #include <cctype>
-#include <stdexcept>
+#include <cstdio>
+#include <limits>
 
 #ifdef _WIN32
 #include <conio.h>
@@ -14,18 +13,24 @@
 #include <unistd.h>
 #endif
 
+#include "question_loader.h"
 #include "quiz_logic.h"
 #include "quiz_controller.h"
 #include "admin_validation.h"
 
 const std::string QUESTION_FILE = "data/questions.txt";
+
 const std::string ADMIN_USERNAME = "admin";
 const std::string ADMIN_PASSWORD = "admin123";
+
+const std::vector<std::string> TOPICS = {
+    "ML", "DBMS", "SE", "DSA", "GK"
+};
 
 // Read the password while displaying * instead of actual characters.
 std::string readPasswordMasked() {
     std::string password;
-    std::cout << "Admin password: " << std::flush;
+    std::cout << "Enter administrator password: " << std::flush;
 
 #ifdef _WIN32
     while (true) {
@@ -92,80 +97,108 @@ std::string readPasswordMasked() {
     return password;
 }
 
+// Convert a string to uppercase.
 std::string upperCase(std::string text) {
     for (char& ch : text) {
         ch = static_cast<char>(
             std::toupper(static_cast<unsigned char>(ch))
         );
     }
+
     return text;
 }
 
-std::vector<Question> loadQuestions() {
-    std::vector<Question> questions;
-    std::ifstream file(QUESTION_FILE);
-    std::string line;
+// Remove leading and trailing whitespace.
+std::string trimText(const std::string& text) {
+    const std::size_t first =
+        text.find_first_not_of(" \t\r\n");
 
-    if (!file.is_open()) {
-        return questions;
+    if (first == std::string::npos) {
+        return "";
     }
 
-    while (std::getline(file, line)) {
-        std::stringstream ss(line);
-        std::vector<std::string> fields;
-        std::string field;
+    const std::size_t last =
+        text.find_last_not_of(" \t\r\n");
 
-        while (std::getline(ss, field, '|')) {
-            fields.push_back(field);
-        }
-
-        if (fields.size() != 6 || fields[5].size() != 1) {
-            continue;
-        }
-
-        Question q;
-        q.text = fields[0];
-        q.options = {fields[1], fields[2], fields[3], fields[4]};
-        q.answer = upperCase(fields[5])[0];
-
-        if (isValidQuestion(q)) {
-            questions.push_back(q);
-        }
-    }
-
-    return questions;
+    return text.substr(first, last - first + 1);
 }
 
+// Check that a topic is one of the supported topics.
+bool validTopicName(const std::string& topic) {
+    for (const std::string& validTopic : TOPICS) {
+        if (topic == validTopic) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// Load questions from the question bank.
+std::vector<Question> loadQuestionsFromFile() {
+    return loadQuestions(QUESTION_FILE);
+}
+
+// Save all questions to the question bank.
 bool saveAllQuestions(const std::vector<Question>& questions) {
+    // Validate all questions (including topic) before opening the file for writing.
+    for (const Question& question : questions) {
+        if (!isValidQuestion(question) ||
+            !validTopicName(question.topic)) {
+            std::cerr << "Error: Invalid question or topic.\n";
+            return false;
+        }
+
+        if (question.text.find('|') != std::string::npos) {
+            std::cerr << "Error: Question text cannot contain '|'.\n";
+            return false;
+        }
+
+        for (const std::string& option : question.options) {
+            if (option.find('|') != std::string::npos) {
+                std::cerr << "Error: Options cannot contain '|'.\n";
+                return false;
+            }
+        }
+    }
+
     std::ofstream file(QUESTION_FILE, std::ios::trunc);
 
     if (!file.is_open()) {
-        std::cout << "Error: Could not open question file.\n";
+        std::cerr << "Error: Could not open the question bank for writing.\n";
         return false;
     }
 
-    for (const Question& q : questions) {
-        if (!isValidQuestion(q)) {
-            continue;
-        }
+    for (const Question& question : questions) {
+        file << question.topic << '|'
+             << question.text;
 
-        file << q.text;
-
-        for (const std::string& option : q.options) {
+        for (const std::string& option : question.options) {
             file << '|' << option;
         }
 
-        file << '|' << upperCase(std::string(1, q.answer)) << '\n';
+        file << '|'
+             << upperCase(std::string(1, question.answer))
+             << '\n';
     }
 
-    return file.good();
+    if (!file.good()) {
+        std::cerr << "Error: Failed while writing the question bank.\n";
+        return false;
+    }
+
+    return true;
 }
 
+// Authenticate the administrator.
 bool adminLogin() {
     std::string username;
     std::string password;
 
-    std::cout << "Admin username: ";
+    std::cout << "\n========== ADMIN LOGIN ==========\n";
+
+    std::cout << "Enter administrator username: ";
+
     if (!std::getline(std::cin, username)) {
         return false;
     }
@@ -178,70 +211,140 @@ bool adminLogin() {
         return false;
     }
 
-    if (username == ADMIN_USERNAME && password == ADMIN_PASSWORD) {
+    if (username == ADMIN_USERNAME &&
+        password == ADMIN_PASSWORD) {
         std::cout << "Admin login successful.\n";
         return true;
     }
 
-    std::cout << "Access denied. Admin login required.\n";
+    std::cout << "Access denied. Invalid username or password.\n";
     return false;
 }
 
-bool readQuestion(Question& q) {
-    std::string answer;
+// Ask the administrator to choose a topic.
+bool readTopic(std::string& topic) {
+    std::cout << "\nSelect question topic:\n"
+              << "1. Machine Learning (ML)\n"
+              << "2. Database Management Systems (DBMS)\n"
+              << "3. Software Engineering (SE)\n"
+              << "4. Data Structures and Algorithms (DSA)\n"
+              << "5. General Knowledge (GK)\n"
+              << "Enter topic number: ";
 
-    std::cout << "Enter question text: ";
-    if (!std::getline(std::cin, q.text)) {
+    std::string input;
+
+    if (!std::getline(std::cin, input)) {
         return false;
     }
 
-    q.options.resize(4);
-
-    for (int i = 0; i < 4; ++i) {
-        std::cout << "Enter option " << char('A' + i) << ": ";
-
-        if (!std::getline(std::cin, q.options[i])) {
-            return false;
-        }
-    }
-
-    std::cout << "Enter correct answer (A-D): ";
-
-    if (!std::getline(std::cin, answer)) {
-        return false;
-    }
-
-    if (answer.size() != 1) {
-        std::cout << "Invalid answer. Use A, B, C, or D.\n";
-        return false;
-    }
-
-    q.answer = upperCase(answer)[0];
-
-    if (!isValidQuestion(q)) {
-        std::cout
-            << "Invalid question. Please check the text, options, and answer.\n";
+    if (input == "1") {
+        topic = "ML";
+    } else if (input == "2") {
+        topic = "DBMS";
+    } else if (input == "3") {
+        topic = "SE";
+    } else if (input == "4") {
+        topic = "DSA";
+    } else if (input == "5") {
+        topic = "GK";
+    } else {
+        std::cout << "Invalid topic selection.\n";
         return false;
     }
 
     return true;
 }
 
-void addQuestion() {
-    Question q;
+// Read and validate a new question.
+bool readQuestion(Question& question) {
+    std::string answer;
 
-    if (!readQuestion(q)) {
+    if (!readTopic(question.topic)) {
+        return false;
+    }
+
+    std::cout << "Enter question text: ";
+
+    if (!std::getline(std::cin, question.text)) {
+        return false;
+    }
+
+    question.text = trimText(question.text);
+    question.options.clear();
+
+    for (int i = 0; i < 4; ++i) {
+        std::string option;
+
+        std::cout << "Enter option "
+                  << static_cast<char>('A' + i)
+                  << " text: ";
+
+        if (!std::getline(std::cin, option)) {
+            return false;
+        }
+
+        question.options.push_back(trimText(option));
+    }
+
+    std::cout << "Enter the correct option letter (A, B, C, or D): ";
+
+    if (!std::getline(std::cin, answer)) {
+        return false;
+    }
+
+    answer = upperCase(trimText(answer));
+
+    if (answer.size() != 1) {
+        std::cout
+            << "Invalid answer. Enter exactly one letter: A, B, C, or D.\n";
+        return false;
+    }
+
+    question.answer = answer[0];
+
+    if (!isValidQuestion(question)) {
+        std::cout
+            << "Invalid question. The question and all four options "
+               "must be non-empty, and the correct answer must be A, B, C, or D.\n";
+        return false;
+    }
+
+    if (question.text.find('|') != std::string::npos) {
+        std::cout
+            << "The question text cannot contain the '|' character.\n";
+        return false;
+    }
+
+    for (const std::string& option : question.options) {
+        if (option.find('|') != std::string::npos) {
+            std::cout
+                << "Answer options cannot contain the '|' character.\n";
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// Add a question to the question bank.
+void addQuestion() {
+    Question question;
+
+    if (!readQuestion(question)) {
+        std::cout << "Question was not added. Please check your input.\n";
         return;
     }
 
-    if (saveQuestion(q, QUESTION_FILE)) {
+    // Use the existing implementation from admin_validation.cpp.
+    if (saveQuestion(question, QUESTION_FILE)) {
         std::cout << "Question added successfully.\n";
     } else {
-        std::cout << "Could not save question.\n";
+        std::cout << "Error: Could not save the question.\n";
     }
 }
 
-static int readQuestionNumber(std::size_t count) {
+// Read and validate a question number.
+int readQuestionNumber(std::size_t count) {
     std::string input;
 
     if (!std::getline(std::cin, input)) {
@@ -249,105 +352,144 @@ static int readQuestionNumber(std::size_t count) {
     }
 
     try {
-        std::size_t pos = 0;
-        int number = std::stoi(input, &pos);
+        std::size_t position = 0;
+        int number = std::stoi(input, &position);
 
-        if (pos != input.size() ||
+        if (position != input.size() ||
             number < 1 ||
-            number > static_cast<int>(count)) {
-            throw std::invalid_argument("invalid number");
+            static_cast<std::size_t>(number) > count) {
+            std::cout
+                << "Invalid question number. Enter a number from 1 to "
+                << count << ".\n";
+            return -1;
         }
 
         return number;
     } catch (...) {
-        std::cout << "Invalid question number.\n";
+        std::cout
+            << "Invalid input. Enter a whole number corresponding "
+               "to a question in the list.\n";
         return -1;
     }
 }
 
-void modifyQuestion() {
-    std::vector<Question> questions = loadQuestions();
+// Display all questions in the question bank.
+void displayQuestions(const std::vector<Question>& questions) {
+    std::cout << "\n========== QUESTION BANK ==========\n";
 
     if (questions.empty()) {
-        std::cout << "No questions available to modify.\n";
+        std::cout << "The question bank is currently empty.\n";
         return;
     }
 
     for (std::size_t i = 0; i < questions.size(); ++i) {
-        std::cout << i + 1 << ". " << questions[i].text << '\n';
+        std::cout << i + 1 << ". ["
+                  << questions[i].topic << "] "
+                  << questions[i].text << '\n';
     }
 
-    std::cout << "Enter question number to modify: ";
+    std::cout << "\nTotal questions: "
+              << questions.size() << '\n';
+}
+
+// Modify an existing question.
+void modifyQuestionInBank() {
+    std::vector<Question> questions = loadQuestionsFromFile();
+
+    if (questions.empty()) {
+        std::cout << "No questions are available to modify.\n";
+        return;
+    }
+
+    displayQuestions(questions);
+
+    std::cout << "Enter the question number to modify (1-"
+              << questions.size() << "): ";
 
     int number = readQuestionNumber(questions.size());
 
-    if (number < 0) {
+    if (number < 1) {
         return;
     }
 
-    Question updated;
+    Question updatedQuestion;
 
-    std::cout << "Enter the updated question details:\n";
+    std::cout << "\nEnter the updated question details.\n";
 
-    if (!readQuestion(updated)) {
+    if (!readQuestion(updatedQuestion)) {
+        std::cout
+            << "Question modification cancelled. "
+               "Please check your input and try again.\n";
         return;
     }
 
-    questions[number - 1] = updated;
+    questions[static_cast<std::size_t>(number - 1)] =
+        updatedQuestion;
 
     if (saveAllQuestions(questions)) {
         std::cout << "Question modified successfully.\n";
+    } else {
+        std::cout << "Error: Could not save the changes.\n";
     }
 }
 
-void deleteQuestion() {
-    std::vector<Question> questions = loadQuestions();
+// Delete a question after confirmation.
+void deleteQuestionFromBank() {
+    std::vector<Question> questions = loadQuestionsFromFile();
 
     if (questions.empty()) {
-        std::cout << "No questions available to delete.\n";
+        std::cout << "No questions are available to delete.\n";
         return;
     }
 
-    for (std::size_t i = 0; i < questions.size(); ++i) {
-        std::cout << i + 1 << ". " << questions[i].text << '\n';
-    }
+    displayQuestions(questions);
 
-    std::cout << "Enter question number to delete: ";
+    std::cout << "Enter the question number to delete (1-"
+              << questions.size() << "): ";
 
     int number = readQuestionNumber(questions.size());
 
-    if (number < 0) {
+    if (number < 1) {
         return;
     }
 
-    std::cout << "Delete question " << number << "? (y/n): ";
+    std::cout << "Are you sure you want to delete question "
+              << number
+              << "? Enter Y to confirm or N to cancel: ";
 
-    std::string confirm;
+    std::string confirmation;
 
-    if (!std::getline(std::cin, confirm)) {
+    if (!std::getline(std::cin, confirmation)) {
         return;
     }
 
-    if (confirm != "y" && confirm != "Y") {
-        std::cout << "Deletion cancelled.\n";
+    confirmation = upperCase(confirmation);
+
+    if (confirmation != "Y") {
+        std::cout << "Deletion cancelled. No questions were deleted.\n";
         return;
     }
 
-    questions.erase(questions.begin() + number - 1);
+    questions.erase(questions.begin() + (number - 1));
 
     if (saveAllQuestions(questions)) {
         std::cout << "Question deleted successfully.\n";
+    } else {
+        std::cout << "Error: Could not save the changes.\n";
     }
 }
 
+// Display and process administrator menu choices.
 void adminMenu() {
     while (true) {
-        std::cout << "\n--- Admin Menu ---\n"
-                  << "1. Add question\n"
-                  << "2. Modify question\n"
-                  << "3. Delete question\n"
-                  << "4. Logout\n"
-                  << "Enter choice: ";
+        std::cout
+            << "\n========== ADMIN MENU ==========\n"
+            << "1. Add a question\n"
+            << "2. Modify an existing question\n"
+            << "3. Delete a question\n"
+            << "4. View all questions\n"
+            << "5. Log out\n"
+            << "Enter your menu choice (1-5): ";
 
         std::string input;
 
@@ -355,31 +497,37 @@ void adminMenu() {
             return;
         }
 
-        if (input == "4") {
-            std::cout << "Admin logged out.\n";
-            return;
-        } else if (input == "1") {
+        if (input == "1") {
             addQuestion();
         } else if (input == "2") {
-            modifyQuestion();
+            modifyQuestionInBank();
         } else if (input == "3") {
-            deleteQuestion();
+            deleteQuestionFromBank();
+        } else if (input == "4") {
+            displayQuestions(loadQuestionsFromFile());
+        } else if (input == "5") {
+            std::cout << "Admin logged out successfully.\n";
+            return;
         } else {
-            std::cout << "Invalid menu option.\n";
+            std::cout
+                << "Invalid menu choice. Enter a number from 1 to 5.\n";
         }
     }
 }
 
 int main() {
-    QuizController controller(
-        [] { return loadQuestions(); },
-        [] {
-            if (adminLogin()) {
-                adminMenu();
-            }
-        }
-    );
+    auto loader = []() -> std::vector<Question> {
+        return loadQuestionsFromFile();
+    };
 
+    auto adminAction = []() {
+        if (adminLogin()) {
+            adminMenu();
+        }
+    };
+
+    QuizController controller(loader, adminAction);
     controller.run();
+
     return 0;
 }
