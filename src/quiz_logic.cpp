@@ -15,3 +15,7 @@ void QuizLogic::updateScore(const Question& q, char choice) {
 int QuizLogic::getScore() const {
     return score;
 }
+
+void QuizLogic::resetScore() {
+    score = 0;
+}

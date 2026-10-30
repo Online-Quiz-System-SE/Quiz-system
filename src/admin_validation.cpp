@@ -1,23 +1,33 @@
 #include "admin_validation.h"
-#include <sstream>
+
 #include <cctype>
+#include <cstddef>
 #include <fstream>
+#include <sstream>
+#include <string>
+#include <vector>
 
 bool isValidQuestion(const Question& question) {
-    if (question.text.find_first_not_of(" \t\r\n") == std::string::npos) {
+    // Question text cannot be empty.
+    if (question.text.find_first_not_of(" \t\r\n") ==
+        std::string::npos) {
         return false;
     }
 
+    // Exactly four options are required.
     if (question.options.size() != 4) {
         return false;
     }
 
+    // Every option must contain text.
     for (const auto& option : question.options) {
-        if (option.find_first_not_of(" \t\r\n") == std::string::npos) {
+        if (option.find_first_not_of(" \t\r\n") ==
+            std::string::npos) {
             return false;
         }
     }
 
+    // The correct answer must be A, B, C, or D.
     char answer = static_cast<char>(
         std::toupper(static_cast<unsigned char>(question.answer))
     );
@@ -25,7 +35,8 @@ bool isValidQuestion(const Question& question) {
     return answer >= 'A' && answer <= 'D';
 }
 
-bool saveQuestion(const Question& question, const std::string& filePath) {
+bool saveQuestion(const Question& question,
+                  const std::string& filePath) {
     if (!isValidQuestion(question)) {
         return false;
     }
@@ -51,46 +62,126 @@ bool saveQuestion(const Question& question, const std::string& filePath) {
     return file.good();
 }
 
-bool loadQuestions(std::vector<Question>& questions,
-                   const std::string& filePath) {
-    std::ifstream file(filePath);
-
-    if (!file.is_open()) {
+bool modifyQuestion(
+    const std::string& filePath,
+    std::size_t questionIndex,
+    const Question& updatedQuestion
+) {
+    if (!isValidQuestion(updatedQuestion)) {
         return false;
     }
 
+    std::ifstream input(filePath);
+
+    if (!input.is_open()) {
+        return false;
+    }
+
+    std::vector<std::string> lines;
     std::string line;
 
-    while (std::getline(file, line)) {
-        std::vector<std::string> fields;
-        std::string field;
-        std::istringstream stream(line);
+    while (std::getline(input, line)) {
+        lines.push_back(line);
+    }
 
-        while (std::getline(stream, field, '|')) {
-            fields.push_back(field);
-        }
+    if (input.bad()) {
+        return false;
+    }
 
-        if (fields.size() != 6) {
-            continue;
-        }
+    input.close();
 
-        Question question;
-        question.text = fields[0];
+    if (questionIndex >= lines.size()) {
+        return false;
+    }
 
-        for (int i = 1; i <= 4; ++i) {
-            question.options.push_back(fields[i]);
-        }
+    std::ostringstream outputLine;
 
-        if (fields[5].size() != 1) {
-            continue;
-        }
+    outputLine << updatedQuestion.text;
 
-        question.answer = fields[5][0];
+    for (const auto& option : updatedQuestion.options) {
+        outputLine << '|' << option;
+    }
 
-        if (isValidQuestion(question)) {
-            questions.push_back(question);
+    char answer = static_cast<char>(
+        std::toupper(
+            static_cast<unsigned char>(updatedQuestion.answer)
+        )
+    );
+
+    outputLine << '|' << answer;
+
+    lines[questionIndex] = outputLine.str();
+
+    std::ofstream output(filePath, std::ios::trunc);
+
+    if (!output.is_open()) {
+        return false;
+    }
+
+    for (const auto& savedLine : lines) {
+        output << savedLine << '\n';
+
+        if (!output.good()) {
+            return false;
         }
     }
 
-    return !file.bad();
+    return output.good();
+}
+
+bool deleteQuestion(
+    const std::string& filePath,
+    std::size_t questionIndex
+) {
+    std::ifstream input(filePath);
+
+    if (!input.is_open()) {
+        return false;
+    }
+
+    std::vector<std::string> lines;
+    std::string line;
+
+    while (std::getline(input, line)) {
+        lines.push_back(line);
+    }
+
+    if (input.bad()) {
+        return false;
+    }
+
+    input.close();
+
+    if (questionIndex >= lines.size()) {
+        return false;
+    }
+
+    lines.erase(lines.begin() +
+                static_cast<std::ptrdiff_t>(questionIndex));
+
+    std::ofstream output(filePath, std::ios::trunc);
+
+    if (!output.is_open()) {
+        return false;
+    }
+
+    for (const auto& savedLine : lines) {
+        output << savedLine << '\n';
+
+        if (!output.good()) {
+            return false;
+        }
+    }
+
+    return output.good();
+}
+
+// Checks that the username and password are not empty or whitespace-only.
+bool areCredentialsNonEmpty(const std::string& username,
+                            const std::string& password) {
+    auto hasNonWhitespace = [](const std::string& value) {
+        return value.find_first_not_of(" \t\r\n") != std::string::npos;
+    };
+
+    return hasNonWhitespace(username) && hasNonWhitespace(password);
 }
