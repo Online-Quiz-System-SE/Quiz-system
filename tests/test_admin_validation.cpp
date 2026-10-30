@@ -1,3 +1,4 @@
+
 #include <cassert>
 #include <cstdio>
 #include <fstream>
@@ -70,9 +71,33 @@ int main() {
         assert(savedQuestion == "What is 2 + 2?|1|2|4|5|C");
     }
 
+    // QZ-16: Admin credential validation tests
+
+    // Valid credentials
+    assert(areCredentialsNonEmpty("admin", "admin123"));
+
+    // Empty username
+    assert(!areCredentialsNonEmpty("", "admin123"));
+
+    // Empty password
+    assert(!areCredentialsNonEmpty("admin", ""));
+
+    // Both fields empty
+    assert(!areCredentialsNonEmpty("", ""));
+
+    // Whitespace-only username
+    assert(!areCredentialsNonEmpty("   ", "admin123"));
+
+    // Whitespace-only password
+    assert(!areCredentialsNonEmpty("admin", "   "));
+
+    // Tabs and newlines are also whitespace
+    assert(!areCredentialsNonEmpty("\t\n", "admin123"));
+    assert(!areCredentialsNonEmpty("admin", "\t\n"));
+
     std::remove(testFile.c_str());
 
-    std::cout << "QZ-18 validation tests passed!" << std::endl;
+    std::cout << "QZ-18 and QZ-16 validation tests passed!" << std::endl;
 
     return 0;
 }

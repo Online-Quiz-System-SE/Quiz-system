@@ -1,5 +1,75 @@
-Which data structure is FIFO?|Stack|Queue|Tree|Graph|B
-Which keyword declares a constant in C++?|static|volatile|const|mutable|C
-What does CPU stand for?|Central Processing Unit|Central Process Utility|Computer Personal Unit|Core Program Unit|A
-Which header provides std::vector?|<list>|<array>|<map>|<vector>|D
-What is 2 to the power 10?|512|1000|1024|2048|C
+ML|Which type of learning uses labeled training data?|Supervised learning|Unsupervised learning|Reinforcement learning|Random learning|A
+ML|Which algorithm is commonly used for classification?|Linear regression|Logistic regression|K-means|PCA|B
+ML|What does overfitting mean?|Model performs well on unseen data|Model memorizes training data and generalizes poorly|Model has no parameters|Dataset has no labels|B
+ML|Which metric is the harmonic mean of precision and recall?|Accuracy|Specificity|F1-score|Mean squared error|C
+ML|What is the purpose of a validation dataset?|Train the model weights only|Tune hyperparameters and evaluate during development|Replace all training data|Store final predictions|B
+ML|Which algorithm is commonly used for clustering?|K-means|Linear regression|Naive Bayes|Decision tree classifier|A
+ML|What does a confusion matrix summarize?|Model training time|Classification prediction outcomes|Feature storage size|Learning rate changes|B
+ML|Which method reduces dimensionality?|PCA|Gradient descent|Dropout|Bagging|A
+ML|What is a feature in machine learning?|A model error|An input variable used for prediction|A predicted class only|A training epoch|B
+ML|Which technique helps reduce overfitting in neural networks?|Increasing noise in labels|Dropout|Removing the test set|Training on one example|B
+ML|What is a common loss function for regression?|Mean squared error|Cross-entropy|Hinge loss only|Accuracy|A
+ML|What does an epoch represent?|One model parameter|One complete pass through the training dataset|One prediction|One feature|B
+ML|Which algorithm is based on Bayes' theorem?|Naive Bayes|K-means|PCA|Apriori only|A
+ML|What is the purpose of a test dataset?|Tune every training parameter|Fit model weights|Estimate performance on unseen data|Duplicate training examples|C
+ML|Which learning approach learns through rewards and penalties?|Supervised learning|Unsupervised learning|Reinforcement learning|Transfer-only learning|C
+DBMS|What does SQL stand for?|Structured Query Language|Simple Question Logic|Sequential Queue Language|System Query Link|A
+DBMS|Which key uniquely identifies a row in a table?|Foreign key|Primary key|Duplicate key|Temporary key|B
+DBMS|What is a foreign key used for?|Sorting rows|Linking related tables|Encrypting a column|Deleting duplicate databases|B
+DBMS|Which normal form eliminates partial dependency on a candidate key?|1NF|2NF|3NF|BCNF only|B
+DBMS|What does ACID stand for in transactions?|Atomicity, Consistency, Isolation, Durability|Accuracy, Control, Integrity, Distribution|Access, Consistency, Indexing, Data|Atomicity, Calculation, Isolation, Dependency|A
+DBMS|Which SQL command retrieves data?|INSERT|UPDATE|SELECT|ALTER|C
+DBMS|Which clause filters rows before grouping?|ORDER BY|WHERE|HAVING|LIMIT|B
+DBMS|Which clause filters grouped results?|WHERE|FROM|HAVING|VALUES|C
+DBMS|What is an index primarily used for?|Speeding up data retrieval|Increasing duplicate rows|Replacing all constraints|Removing transactions|A
+DBMS|Which command removes a table definition and its data?|UPDATE|DROP TABLE|SELECT|INSERT|B
+DBMS|What is a database transaction?|A logical unit of database work|A column alias|A table index|A query comment|A
+DBMS|Which join returns matching rows from both tables?|INNER JOIN|CROSS JOIN|FULL JOIN|LEFT JOIN with no condition|A
+DBMS|What does COMMIT do?|Undo the current transaction|Permanently save transaction changes|Delete a table|Create a database user|B
+DBMS|Which property prevents concurrent transactions from interfering improperly?|Isolation|Duplication|Projection|Indexing|A
+DBMS|What is a view in SQL?|A virtual table defined by a query|A physical CPU register|A transaction log only|A database password|A
+SE|What does SDLC stand for?|Software Development Life Cycle|System Data Link Control|Software Design Logic Code|Sequential Development Language Cycle|A
+SE|Which model develops software in sequential phases?|Waterfall|Scrum|Spiral only|Kanban only|A
+SE|What is the primary purpose of unit testing?|Test individual components|Test the entire organization|Replace code reviews|Deploy the application|A
+SE|What is a software requirement?|A documented capability or constraint the system must satisfy|A compiler warning only|A source-code comment|A deployment server|A
+SE|Which practice integrates code changes frequently?|Continuous integration|Big-bang integration|Manual duplication|Code freezing forever|A
+SE|What is refactoring?|Improving internal code structure without changing behavior|Adding unrelated features|Deleting all tests|Changing user requirements automatically|A
+SE|What is a key Scrum event for planning a sprint?|Sprint planning|Annual audit|Database backup|Final deployment only|A
+SE|What is regression testing?|Checking that changes have not broken existing behavior|Testing only network speed|Writing requirements|Removing old features|A
+SE|What does UML stand for?|Unified Modeling Language|Universal Machine Logic|User Module List|Unified Markup Link|A
+SE|What is the purpose of version control?|Track and manage changes to files|Increase CPU frequency|Replace testing|Compile without source code|A
+SE|Which document describes how a system should behave from a user's perspective?|Use case description|Machine code listing|Build log|Database index|A
+SE|What is coupling in software design?|Dependency between modules|Number of test cases only|Screen resolution|A type of loop|A
+SE|What does high cohesion generally indicate?|Related responsibilities are grouped within a module|Every module depends on every other module|No module has a purpose|All code is duplicated|A
+SE|What is a software prototype?|An early model used to explore or validate ideas|The final production database|A mandatory compiled release|A test failure report|A
+SE|What is the purpose of code review?|Identify defects and improve code quality|Eliminate all documentation|Replace source control|Guarantee zero defects mathematically|A
+DSA|Which data structure follows FIFO order?|Stack|Queue|Heap|Graph|B
+DSA|Which data structure follows LIFO order?|Queue|Stack|Linked list only|Tree only|B
+DSA|What is the average time complexity of binary search on a sorted array?|O(n)|O(log n)|O(n log n)|O(1) always|B
+DSA|Which traversal visits a binary search tree in sorted order?|Preorder|Postorder|Inorder|Level order only|C
+DSA|Which data structure is commonly used for BFS?|Stack|Queue|Priority queue only|Hash table only|B
+DSA|Which algorithm finds shortest paths with non-negative edge weights?|Dijkstra's algorithm|Binary search|Merge sort|Kruskal's algorithm only|A
+DSA|What is the worst-case time complexity of merge sort?|O(n)|O(log n)|O(n log n)|O(n squared)|C
+DSA|Which data structure supports average O(1) key lookup?|Hash table|Unsorted array scan|Stack|Queue|A
+DSA|What is the worst-case time complexity of quicksort?|O(n)|O(log n)|O(n log n)|O(n squared)|D
+DSA|Which data structure is used to represent hierarchical relationships?|Tree|Queue|Stack only|Hash function|A
+DSA|Which technique solves problems by combining solutions to smaller subproblems?|Divide and conquer|Linear probing|Sequential search only|Random guessing|A
+DSA|What is the time complexity of accessing an array element by index?|O(1)|O(log n)|O(n)|O(n squared)|A
+DSA|Which algorithm finds a minimum spanning tree?|Kruskal's algorithm|Binary search|BFS only|Insertion sort|A
+DSA|What does a graph edge represent?|A connection between vertices|A sorting position|A stack operation|An array index only|A
+DSA|Which data structure is commonly used to implement a priority queue efficiently?|Binary heap|Plain stack only|FIFO queue only|Unsorted linked list is always O(1) for removal of maximum|A
+GK|What is the capital of Australia?|Sydney|Melbourne|Canberra|Perth|C
+GK|Which planet is known as the Red Planet?|Venus|Mars|Jupiter|Mercury|B
+GK|What is the largest ocean on Earth?|Atlantic Ocean|Indian Ocean|Arctic Ocean|Pacific Ocean|D
+GK|How many sides does a hexagon have?|Five|Six|Seven|Eight|B
+GK|Which gas do plants absorb during photosynthesis?|Oxygen|Nitrogen|Carbon dioxide|Hydrogen|C
+GK|What is the currency of Japan?|Yuan|Won|Yen|Ringgit|C
+GK|Which is the largest planet in our Solar System?|Earth|Saturn|Jupiter|Neptune|C
+GK|Which organ pumps blood through the human body?|Lungs|Brain|Liver|Heart|D
+GK|What is the chemical symbol for gold?|Ag|Au|Gd|Go|B
+GK|Which continent contains the Sahara Desert?|Asia|South America|Africa|Europe|C
+GK|How many days are there in a leap year?|365|366|364|367|B
+GK|Which instrument measures atmospheric pressure?|Thermometer|Barometer|Hygrometer|Anemometer|B
+GK|What is the nearest star to Earth?|Sirius|Proxima Centauri|The Sun|Alpha Centauri A|C
+GK|Which language is primarily used for writing web page structure?|HTML|SQL|Bash|CMake|A
+GK|Which is the largest mammal in the world?|African elephant|Blue whale|Giraffe|Hippopotamus|B
