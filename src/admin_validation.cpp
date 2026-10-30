@@ -47,7 +47,7 @@ bool saveQuestion(const Question& question,
         return false;
     }
 
-    file << question.text;
+    file << question.topic << '|' << question.text;
 
     for (const auto& option : question.options) {
         file << '|' << option;
@@ -96,7 +96,7 @@ bool modifyQuestion(
 
     std::ostringstream outputLine;
 
-    outputLine << updatedQuestion.text;
+    outputLine << updatedQuestion.topic << '|' << updatedQuestion.text;
 
     for (const auto& option : updatedQuestion.options) {
         outputLine << '|' << option;
