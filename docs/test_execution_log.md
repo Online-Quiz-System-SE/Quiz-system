@@ -4,8 +4,8 @@
 |---|---|
 | Issue | QZ-23 (#25) |
 | Test plan | Software Test Plan v1.0, section 13.2 |
-| Date | 2026-10-30 23:53 |
-| Commit | 8a824ae (feature/QZ-23-system-tests) |
+| Date | 2026-10-30 23:57 |
+| Commit | 030af1c (feature/QZ-23-system-tests) |
 | OS | Darwin 25.6.0 |
 | Compiler | Apple clang version 21.0.0 (clang-2100.1.1.101) |
 | Build | OK, 0 warnings (-std=c++17 -Wall -Wextra) |
@@ -26,7 +26,7 @@
 | TC-09 | OQ-F-009 | High | PASS | Stays on Q1 after E, moves to Q2 after A |
 | TC-10 | OQ-F-010 | High | PASS | answers_3of5 gives final score 3 |
 | TC-11 | OQ-F-011 | High | PASS | Result screen shows Your score: 3 / 5 |
-| TC-12 | OQ-F-012 | Medium | FAIL | FAILED: saved with topic in TOPIC-pipe format. FAILED: question appears in the loaded bank.  |
+| TC-12 | OQ-F-012 | Medium | PASS | Question saved (6 questions) and loaded |
 | TC-13 | OQ-F-013 | Medium | PASS | Q2 text and answer updated and used in the quiz |
 | TC-14 | OQ-F-014 | Medium | PASS | Q6 deleted after Y confirmation; 5 remain |
 | TC-15 | OQ-F-015 | High, Security | PASS | Add/modify/delete unreachable without login; data unchanged. Note: app shows Invalid menu choice (STP wording: Access denied) |
@@ -45,8 +45,8 @@
 ## Summary
 
 - Executed: 26 / 26
-- Passed: 22
-- Failed: 1
+- Passed: 23
+- Failed: 0
 - Manual or partial: 3
 - Exit criteria: All automated High-priority and security cases passed
 
