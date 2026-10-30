@@ -11,8 +11,13 @@
 #include "admin_validation.h"
 
 const std::string QUESTION_FILE = "data/questions.txt";
+
 const std::string ADMIN_USERNAME = "admin";
 const std::string ADMIN_PASSWORD = "admin123";
+
+const std::vector<std::string> TOPICS = {
+    "ML", "DBMS", "SE", "DSA", "GK"
+};
 
 // Convert a string to uppercase.
 std::string upperCase(std::string text) {
@@ -25,6 +30,32 @@ std::string upperCase(std::string text) {
     return text;
 }
 
+// Remove leading and trailing whitespace.
+std::string trimText(const std::string& text) {
+    const std::size_t first =
+        text.find_first_not_of(" \t\r\n");
+
+    if (first == std::string::npos) {
+        return "";
+    }
+
+    const std::size_t last =
+        text.find_last_not_of(" \t\r\n");
+
+    return text.substr(first, last - first + 1);
+}
+
+// Check that a topic is one of the supported topics.
+bool validTopicName(const std::string& topic) {
+    for (const std::string& validTopic : TOPICS) {
+        if (topic == validTopic) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // Load questions from the question bank.
 std::vector<Question> loadQuestionsFromFile() {
     return loadQuestions(QUESTION_FILE);
@@ -32,10 +63,11 @@ std::vector<Question> loadQuestionsFromFile() {
 
 // Save all questions to the question bank.
 bool saveAllQuestions(const std::vector<Question>& questions) {
-    // Validate all questions before opening the file for writing.
+    // Validate all questions (including topic) before opening the file for writing.
     for (const Question& question : questions) {
-        if (!isValidQuestion(question)) {
-            std::cerr << "Error: A question contains invalid data.\n";
+        if (!isValidQuestion(question) ||
+            !validTopicName(question.topic)) {
+            std::cerr << "Error: Invalid question or topic.\n";
             return false;
         }
 
@@ -60,7 +92,8 @@ bool saveAllQuestions(const std::vector<Question>& questions) {
     }
 
     for (const Question& question : questions) {
-        file << question.text;
+        file << question.topic << '|'
+             << question.text;
 
         for (const std::string& option : question.options) {
             file << '|' << option;
@@ -108,26 +141,69 @@ bool adminLogin() {
     return false;
 }
 
+// Ask the administrator to choose a topic.
+bool readTopic(std::string& topic) {
+    std::cout << "\nSelect question topic:\n"
+              << "1. Machine Learning (ML)\n"
+              << "2. Database Management Systems (DBMS)\n"
+              << "3. Software Engineering (SE)\n"
+              << "4. Data Structures and Algorithms (DSA)\n"
+              << "5. General Knowledge (GK)\n"
+              << "Enter topic number: ";
+
+    std::string input;
+
+    if (!std::getline(std::cin, input)) {
+        return false;
+    }
+
+    if (input == "1") {
+        topic = "ML";
+    } else if (input == "2") {
+        topic = "DBMS";
+    } else if (input == "3") {
+        topic = "SE";
+    } else if (input == "4") {
+        topic = "DSA";
+    } else if (input == "5") {
+        topic = "GK";
+    } else {
+        std::cout << "Invalid topic selection.\n";
+        return false;
+    }
+
+    return true;
+}
+
 // Read and validate a new question.
 bool readQuestion(Question& question) {
     std::string answer;
 
-    std::cout << "\nEnter question text: ";
+    if (!readTopic(question.topic)) {
+        return false;
+    }
+
+    std::cout << "Enter question text: ";
 
     if (!std::getline(std::cin, question.text)) {
         return false;
     }
 
-    question.options.resize(4);
+    question.text = trimText(question.text);
+    question.options.clear();
 
     for (int i = 0; i < 4; ++i) {
+        std::string option;
+
         std::cout << "Enter option "
                   << static_cast<char>('A' + i)
                   << " text: ";
 
-        if (!std::getline(std::cin, question.options[i])) {
+        if (!std::getline(std::cin, option)) {
             return false;
         }
+
+        question.options.push_back(trimText(option));
     }
 
     std::cout << "Enter the correct option letter (A, B, C, or D): ";
@@ -136,13 +212,15 @@ bool readQuestion(Question& question) {
         return false;
     }
 
+    answer = upperCase(trimText(answer));
+
     if (answer.size() != 1) {
         std::cout
             << "Invalid answer. Enter exactly one letter: A, B, C, or D.\n";
         return false;
     }
 
-    question.answer = upperCase(answer)[0];
+    question.answer = answer[0];
 
     if (!isValidQuestion(question)) {
         std::cout
@@ -177,6 +255,7 @@ void addQuestion() {
         return;
     }
 
+    // Use the existing implementation from admin_validation.cpp.
     if (saveQuestion(question, QUESTION_FILE)) {
         std::cout << "Question added successfully.\n";
     } else {
@@ -224,7 +303,8 @@ void displayQuestions(const std::vector<Question>& questions) {
     }
 
     for (std::size_t i = 0; i < questions.size(); ++i) {
-        std::cout << i + 1 << ". "
+        std::cout << i + 1 << ". ["
+                  << questions[i].topic << "] "
                   << questions[i].text << '\n';
     }
 
