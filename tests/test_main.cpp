@@ -1,4 +1,6 @@
 #include <cassert>
+#include <cstdio>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -6,6 +8,7 @@
 
 #include "quiz_logic.h"
 #include "quiz_controller.h"
+#include "admin_validation.h"
 
 static std::vector<Question> sampleQuestions() {
     std::vector<Question> questions;
@@ -55,6 +58,11 @@ static bool has(const std::string& text, const std::string& part) {
     return text.find(part) != std::string::npos;
 }
 
+static bool endsWith(const std::string& text, const std::string& suffix) {
+    return text.size() >= suffix.size() &&
+           text.compare(text.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
 void test_check_answer() {
     QuizLogic logic;
     Question q{"Q", {"a", "b", "c", "d"}, 'B'};
@@ -78,6 +86,48 @@ void test_answer_and_score() {
 
     logic.resetScore();
     assert(logic.getScore() == 0);
+}
+
+// QZ-15: Question validation
+void test_question_validation() {
+    Question valid{"What is 2 + 2?", {"1", "2", "4", "5"}, 'C'};
+    assert(isValidQuestion(valid));
+
+    Question emptyText{"   ", {"A", "B", "C", "D"}, 'A'};
+    assert(!isValidQuestion(emptyText));
+
+    Question wrongOptionCount{"Question?", {"A", "B", "C"}, 'A'};
+    assert(!isValidQuestion(wrongOptionCount));
+
+    Question emptyOption{"Question?", {"A", "", "C", "D"}, 'A'};
+    assert(!isValidQuestion(emptyOption));
+
+    Question invalidAnswer{"Question?", {"A", "B", "C", "D"}, 'E'};
+    assert(!isValidQuestion(invalidAnswer));
+}
+
+// QZ-15: Saving a question
+void test_save_question() {
+    const std::string testFile = "test_questions_tmp.txt";
+    std::remove(testFile.c_str());
+
+    Question valid{"What is 2 + 2?", {"1", "2", "4", "5"}, 'C'};
+    valid.topic = "GK";
+
+    assert(saveQuestion(valid, testFile));
+
+    {
+        std::ifstream file(testFile);
+        std::string savedLine;
+        assert(std::getline(file, savedLine));
+        assert(endsWith(savedLine, "What is 2 + 2?|1|2|4|5|C"));
+    }
+
+    // Invalid questions must not be saved.
+    Question invalidAnswer{"Question?", {"A", "B", "C", "D"}, 'E'};
+    assert(!saveQuestion(invalidAnswer, testFile));
+
+    std::remove(testFile.c_str());
 }
 
 void test_topic_selection() {
@@ -133,6 +183,8 @@ void test_menu_routing() {
 int main() {
     test_check_answer();
     test_answer_and_score();
+    test_question_validation();
+    test_save_question();
     test_topic_selection();
     test_five_questions();
     test_invalid_topic();

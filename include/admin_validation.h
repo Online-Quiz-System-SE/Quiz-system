@@ -3,6 +3,7 @@
 #include "quiz_logic.h"
 #include <cstddef>
 #include <string>
+#include <vector>
 
 bool isValidQuestion(const Question& question);
 
