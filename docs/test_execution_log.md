@@ -4,8 +4,8 @@
 |---|---|
 | Issue | QZ-23 (#25) |
 | Test plan | Software Test Plan v1.0, section 13.2 |
-| Date | 2026-10-30 23:46 |
-| Commit | c30761d (feature/QZ-23-system-tests) |
+| Date | 2026-10-30 23:53 |
+| Commit | 8a824ae (feature/QZ-23-system-tests) |
 | OS | Darwin 25.6.0 |
 | Compiler | Apple clang version 21.0.0 (clang-2100.1.1.101) |
 | Build | OK, 0 warnings (-std=c++17 -Wall -Wextra) |
@@ -31,7 +31,7 @@
 | TC-14 | OQ-F-014 | Medium | PASS | Q6 deleted after Y confirmation; 5 remain |
 | TC-15 | OQ-F-015 | High, Security | PASS | Add/modify/delete unreachable without login; data unchanged. Note: app shows Invalid menu choice (STP wording: Access denied) |
 | TC-16 | OQ-F-016 | Medium | PASS | Retry starts from Q1 with score reset to 0 |
-| TC-17 | OQ-NF-001 | Medium | PASS | 20 inputs processed in 15 ms total (each well under 1 s) |
+| TC-17 | OQ-NF-001 | Medium | PASS | 20 inputs processed in 14 ms total (each well under 1 s) |
 | TC-18 | OQ-NF-002 | High | PASS | Score 3 on all 3 runs; one final score per run |
 | TC-19 | OQ-NF-003 | Medium | MANUAL | Needs 3 new users; record results in RTM |
 | TC-20 | OQ-NF-004 | High, Security | PASS | No answers before answering; no admin functions in user menu |
