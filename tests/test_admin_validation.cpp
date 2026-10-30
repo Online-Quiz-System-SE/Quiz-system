@@ -1,4 +1,3 @@
-
 #include <cassert>
 #include <cstdio>
 #include <fstream>
@@ -15,6 +14,7 @@ int main() {
         {"1", "2", "4", "5"},
         'C'
     };
+    valid.topic = "GK";
 
     // Valid question
     assert(isValidQuestion(valid));
@@ -56,7 +56,7 @@ int main() {
         assert(contents == "EXISTING DATA");
     }
 
-    // A valid question should save successfully
+    // A valid question should save successfully, including its topic
     assert(saveQuestion(valid, testFile));
 
     {
@@ -68,7 +68,7 @@ int main() {
 
         std::getline(file, savedQuestion);
 
-        assert(savedQuestion == "What is 2 + 2?|1|2|4|5|C");
+        assert(savedQuestion == "GK|What is 2 + 2?|1|2|4|5|C");
     }
 
     // QZ-16: Admin credential validation tests
