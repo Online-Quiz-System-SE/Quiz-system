@@ -1,26 +1,33 @@
 #include "admin_validation.h"
 
 #include <cctype>
+#include <cstddef>
 #include <fstream>
 #include <sstream>
-#include <vector>
 #include <string>
+#include <vector>
 
 bool isValidQuestion(const Question& question) {
-    if (question.text.find_first_not_of(" \t\r\n") == std::string::npos) {
+    // Question text cannot be empty.
+    if (question.text.find_first_not_of(" \t\r\n") ==
+        std::string::npos) {
         return false;
     }
 
+    // Exactly four options are required.
     if (question.options.size() != 4) {
         return false;
     }
 
+    // Every option must contain text.
     for (const auto& option : question.options) {
-        if (option.find_first_not_of(" \t\r\n") == std::string::npos) {
+        if (option.find_first_not_of(" \t\r\n") ==
+            std::string::npos) {
             return false;
         }
     }
 
+    // The correct answer must be A, B, C, or D.
     char answer = static_cast<char>(
         std::toupper(static_cast<unsigned char>(question.answer))
     );
@@ -28,7 +35,8 @@ bool isValidQuestion(const Question& question) {
     return answer >= 'A' && answer <= 'D';
 }
 
-bool saveQuestion(const Question& question, const std::string& filePath) {
+bool saveQuestion(const Question& question,
+                  const std::string& filePath) {
     if (!isValidQuestion(question)) {
         return false;
     }
@@ -148,7 +156,8 @@ bool deleteQuestion(
         return false;
     }
 
-    lines.erase(lines.begin() + questionIndex);
+    lines.erase(lines.begin() +
+                static_cast<std::ptrdiff_t>(questionIndex));
 
     std::ofstream output(filePath, std::ios::trunc);
 
@@ -165,4 +174,14 @@ bool deleteQuestion(
     }
 
     return output.good();
+}
+
+// Checks that the username and password are not empty or whitespace-only.
+bool areCredentialsNonEmpty(const std::string& username,
+                            const std::string& password) {
+    auto hasNonWhitespace = [](const std::string& value) {
+        return value.find_first_not_of(" \t\r\n") != std::string::npos;
+    };
+
+    return hasNonWhitespace(username) && hasNonWhitespace(password);
 }
