@@ -463,7 +463,7 @@ void deleteQuestionFromBank() {
         return;
     }
 
-    confirmation = upperCase(confirmation);
+    confirmation = upperCase(trimText(confirmation));
 
     if (confirmation != "Y") {
         std::cout << "Deletion cancelled. No questions were deleted.\n";

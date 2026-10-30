@@ -1,6 +1,7 @@
 #pragma once
 
 #include "quiz_logic.h"
+#include <cstddef>
 #include <string>
 
 bool isValidQuestion(const Question& question);
@@ -11,6 +12,11 @@ bool modifyQuestion(
     const std::string& filePath,
     std::size_t questionIndex,
     const Question& updatedQuestion
+);
+
+bool deleteQuestion(
+    const std::string& filePath,
+    std::size_t questionIndex
 );
 
 bool areCredentialsNonEmpty(const std::string& username,

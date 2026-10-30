@@ -1,6 +1,6 @@
-
 #pragma once
 
+#include <cstddef>
 #include <functional>
 #include <iostream>
 #include <string>
@@ -22,6 +22,7 @@ public:
 
     void run();
     void startQuiz();
+    void setDeleteAction(AdminAction action);
     int score() const { return score_; }
 
 private:
@@ -37,6 +38,7 @@ private:
 
     QuestionLoader loader_;
     AdminAction admin_;
+    AdminAction deleteAdmin_;
     std::istream& in_;
     std::ostream& out_;
 

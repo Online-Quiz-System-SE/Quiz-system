@@ -1,7 +1,7 @@
-
 #include "admin_validation.h"
 
 #include <cctype>
+#include <cstddef>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -62,9 +62,11 @@ bool saveQuestion(const Question& question,
     return file.good();
 }
 
-bool modifyQuestion(const std::string& filePath,
-                    std::size_t questionIndex,
-                    const Question& updatedQuestion) {
+bool modifyQuestion(
+    const std::string& filePath,
+    std::size_t questionIndex,
+    const Question& updatedQuestion
+) {
     if (!isValidQuestion(updatedQuestion)) {
         return false;
     }
@@ -93,6 +95,7 @@ bool modifyQuestion(const std::string& filePath,
     }
 
     std::ostringstream outputLine;
+
     outputLine << updatedQuestion.text;
 
     for (const auto& option : updatedQuestion.options) {
@@ -106,6 +109,7 @@ bool modifyQuestion(const std::string& filePath,
     );
 
     outputLine << '|' << answer;
+
     lines[questionIndex] = outputLine.str();
 
     std::ofstream output(filePath, std::ios::trunc);
@@ -116,6 +120,57 @@ bool modifyQuestion(const std::string& filePath,
 
     for (const auto& savedLine : lines) {
         output << savedLine << '\n';
+
+        if (!output.good()) {
+            return false;
+        }
+    }
+
+    return output.good();
+}
+
+bool deleteQuestion(
+    const std::string& filePath,
+    std::size_t questionIndex
+) {
+    std::ifstream input(filePath);
+
+    if (!input.is_open()) {
+        return false;
+    }
+
+    std::vector<std::string> lines;
+    std::string line;
+
+    while (std::getline(input, line)) {
+        lines.push_back(line);
+    }
+
+    if (input.bad()) {
+        return false;
+    }
+
+    input.close();
+
+    if (questionIndex >= lines.size()) {
+        return false;
+    }
+
+    lines.erase(lines.begin() +
+                static_cast<std::ptrdiff_t>(questionIndex));
+
+    std::ofstream output(filePath, std::ios::trunc);
+
+    if (!output.is_open()) {
+        return false;
+    }
+
+    for (const auto& savedLine : lines) {
+        output << savedLine << '\n';
+
+        if (!output.good()) {
+            return false;
+        }
     }
 
     return output.good();
