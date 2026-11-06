@@ -9,8 +9,8 @@
 | Environment | macOS, Apple clang version 21.0.0 (clang-2100.1.1.101), gcovr 8.8 with `xcrun llvm-cov gcov` |
 | Build flags | `-std=c++17 --coverage -O0 -Iinclude` |
 | Scope | All files in `src/` (test code excluded) |
-| Detailed report | `docs/reports/branch_coverage/branch_coverage.html` |
-| Raw summary | `docs/reports/branch_coverage.txt` |
+| Detailed report | `docs/Deliverable_3/branch_coverage/branch_coverage.html` |
+| Raw summary | `docs/Deliverable_3/branch_coverage.txt` |
 
 ## 1. What was run
 
