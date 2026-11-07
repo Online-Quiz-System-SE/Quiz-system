@@ -38,6 +38,7 @@ void QuizController::run() {
         }
 
         if (line == "0") {
+            out_ << "Goodbye!\n";
             return;
         } else if (line == "1") {
             if (admin_) {
