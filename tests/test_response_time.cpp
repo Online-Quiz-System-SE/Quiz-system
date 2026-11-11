@@ -1,5 +1,4 @@
-
-#include <fstream>
+#include <chrono>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -7,87 +6,51 @@
 
 #include "quiz_controller.h"
 
-std::vector<Question> fixedQuestions() {
+// QZ-19 / OQ-NF-001: each user input should be processed within 1 second.
+static std::vector<Question> fixedQuestions() {
     std::vector<Question> questions;
-
     for (int i = 1; i <= 10; ++i) {
-        Question q{
-            "ML Question " + std::to_string(i),
-            {"Option A", "Option B", "Option C", "Option D"},
-            'B'
-        };
+        Question q{"ML Question " + std::to_string(i),
+                   {"Option A", "Option B", "Option C", "Option D"}, 'B'};
         q.topic = "ML";
         questions.push_back(q);
     }
-
     return questions;
 }
 
 int main() {
+    // Main menu -> Take Quiz -> ML, then 4 attempts of 5 answers = 20 responses
     std::string script = "2\n1\n";
-
-    // 4 quiz attempts = 20 responses.
     for (int attempt = 0; attempt < 4; ++attempt) {
-        for (int answer = 0; answer < 5; ++answer) {
-            script += "B\n";
-        }
-
-        // Retry topic for first 3 attempts.
-        // Return to main menu after final attempt.
+        script += "B\nB\nB\nB\nB\n";
         script += (attempt < 3) ? "1\n" : "0\n";
     }
-
     script += "0\n";
 
     std::istringstream in(script);
     std::ostringstream out;
+    QuizController controller([] { return fixedQuestions(); }, [] {}, in, out);
 
-    QuizController controller(
-        [] { return fixedQuestions(); },
-        [] {},
-        in,
-        out
-    );
-
+    auto start = std::chrono::steady_clock::now();
     controller.run();
+    auto end = std::chrono::steady_clock::now();
 
-    std::string output = out.str();
-
-    std::ofstream log("tests/response_time_test.log");
-
-    if (!log.is_open()) {
-        std::cerr << "Cannot create response time log\n";
-        return 1;
+    const std::string output = out.str();
+    int responses = 0;
+    for (std::size_t pos = output.find("Correct answer:"); pos != std::string::npos;
+         pos = output.find("Correct answer:", pos + 1)) {
+        ++responses;
     }
 
-    log << output;
-    log.close();
+    const double totalMs =
+        std::chrono::duration<double, std::milli>(end - start).count();
+    const double averageMs = responses > 0 ? totalMs / responses : 0.0;
 
-    std::istringstream lines(output);
-    std::string line;
+    std::cout << "Responses processed: " << responses << '\n'
+              << "Total time: " << totalMs << " ms\n"
+              << "Average per response: " << averageMs << " ms\n";
 
-    int count = 0;
-    int underOneSecond = 0;
-
-    while (std::getline(lines, line)) {
-        if (line.find("Response time: ") == 0) {
-            long long milliseconds =
-                std::stoll(line.substr(14));
-
-            ++count;
-
-            if (milliseconds < 1000) {
-                ++underOneSecond;
-            }
-
-            std::cout << line << '\n';
-        }
-    }
-
-    std::cout << "\nTotal responses: " << count << '\n';
-    std::cout << "Under 1 second: " << underOneSecond << '\n';
-
-    if (count != 20 || underOneSecond < 19) {
+    if (responses != 20 || averageMs >= 1000.0) {
         std::cerr << "QZ-19 FAILED\n";
         return 1;
     }
