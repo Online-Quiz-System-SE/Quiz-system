@@ -5,3 +5,4 @@ tests_bin.exe
 *.o
 .DS_Store
 tests/response_time_test.log
+tests/response_time_test.log

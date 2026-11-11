@@ -7,7 +7,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <chrono>
 
 QuizController::QuizController(
     QuestionLoader loader,
@@ -236,7 +235,6 @@ bool QuizController::runQuizAttempt(const std::string& topic) {
         if (choice == '\0') {
             return false;
         }
-        auto responseStart = std::chrono::steady_clock::now();
 
         const Question& question = questions_[i];
 
@@ -269,16 +267,6 @@ bool QuizController::runQuizAttempt(const std::string& topic) {
 
         logic.updateScore(question, choice);
         score_ = logic.getScore();
-
-        auto responseEnd = std::chrono::steady_clock::now();
-
-        auto responseTime = std::chrono::duration_cast<
-        std::chrono::milliseconds
-        >(
-         responseEnd - responseStart
-        ).count();
-
-        out_ << "Response time: " << responseTime << " ms\n";  
     }
 
     out_ << "\nQuiz completed!\n"
