@@ -78,10 +78,3 @@ shown in random order (STP-D2, STP-D3), different message wording in TC-15 and T
 | All High-priority and security test cases passed | Met (TC-26 masking confirmed manually) |
 | No open critical defect | Met |
 | RTM updated with results | [Met once the STP and SRS RTM Result columns are updated] |
-
-## 8. Recommendation
-
-The system meets its tested requirements and is ready for the acceptance demo, provided
-the manual results in section 4 are recorded. Before any use outside the course, the
-hard-coded test credentials should be replaced (deviation SRS-D7).
-
