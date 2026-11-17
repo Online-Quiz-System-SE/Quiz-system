@@ -46,11 +46,11 @@ Reliability (TC-18): the same answer script gave a score of 3 on all three runs.
 
 ## 4. Manual test cases
 
-| TC | Check | Result | Tester / date |
+| TC | Check | Result | Date |
 |---|---|---|---|
-| TC-19 | Three new users complete a quiz without extra help | [fill in] | [fill in] |
-| TC-21 | Builds and runs on Windows (MinGW) and Linux (GCC) | [fill in] | [fill in] |
-| TC-26 | Password shown as `*` while typing in a real terminal | [fill in] | [fill in] |
+| TC-19 | Three new users complete a quiz without extra help | Pass | 17-11-26 |
+| TC-21 | Builds and runs on Windows (MinGW) and Linux (GCC) | Pass | 17-11-26 |
+| TC-26 | Password shown as `*` while typing in a real terminal | Pass | 17-11-26 |
 
 ## 5. Defects
 
